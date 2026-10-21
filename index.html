@@ -971,8 +971,8 @@ function gotTail(m){ if (m.x === TX && m.y === TY) { clearTimeout(tailT); tailN 
 function frame(){
   raf = 0;
   if (!ready) { mx = my = sy = 0; return; }
-  // Par Internet, 40 envois par seconde au plus (les serveurs publics n'aiment pas les rafales).
-  if (pc().key && performance.now() - lastTx < 25) { schedule(); return; }
+  // Par Internet, 50 envois par seconde au plus (les serveurs publics n'aiment pas les rafales).
+  if (pc().key && performance.now() - lastTx < 20) { schedule(); return; }
   lastTx = performance.now();
   const ix = Math.trunc(mx), iy = Math.trunc(my), is = Math.trunc(sy);
   if (ix || iy) {
