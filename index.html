@@ -158,6 +158,9 @@ svg{display:block}
 .pcbtn:active{color:var(--ink2)}
 .pcbtn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pcbtn .ico{width:11px;height:11px;color:var(--ink3);stroke-width:1.8}
+/* qualite de la liaison, mesuree en continu : FLUIDE / CORRECT / INSTABLE */
+.qual{margin-left:auto;font-size:9px;letter-spacing:.18em;color:var(--ink3);white-space:nowrap;transition:color .3s}
+.qual.a{color:var(--blue)}.qual.b{color:var(--ink2)}.qual.c{color:#FF9F0A}
 .led{width:6px;height:6px;border-radius:50%;flex:none;background:var(--ink3);transition:background .3s}
 .led.ok{background:var(--blue)}
 .led.wait{animation:pulse 1.2s ease-in-out infinite}
@@ -371,7 +374,7 @@ svg{display:block}
 </div>
 
 <nav class="dock">
-  <button class="pcbtn" id="pcBtn" aria-haspopup="dialog"><i class="led" id="led"></i><span id="pcName">—</span><svg class="ico"><use href="#i-chev"/></svg></button>
+  <button class="pcbtn" id="pcBtn" aria-haspopup="dialog"><i class="led" id="led"></i><span id="pcName">—</span><em class="qual" id="qual"></em><svg class="ico"><use href="#i-chev"/></svg></button>
   <button class="devbtn" id="devBtn" aria-haspopup="dialog">Appareils</button>
 </nav>
 
@@ -880,6 +883,29 @@ function probeStart(){
   setState('settle'); probeTick();
 }
 function probeStop(){ clearTimeout(probe.t); probe.on = false; }
+// ---------- Qualite de la liaison en continu (apres « Connecté ») : un ping par seconde, mot dans la barre du bas.
+// FLUIDE : aller-retour < 200 ms, regulier. CORRECT : < 400 ms. INSTABLE : plus lent, irregulier ou pings perdus :
+// les saccades de la souris viennent d'internet, pas de l'appli.
+let qual = {t: 0, i: 0, sent: {}, rtts: []};
+function qualStart(){ qualStop(); qual = {t: 0, i: 0, sent: {}, rtts: []}; qualTick(); }
+function qualStop(){ clearTimeout(qual.t); const q = $('#qual'); q.textContent = ''; q.className = 'qual'; }
+function qualTick(){
+  if (!ready || !ws || (state !== 'ok' && state !== 'slow')) { qual.t = setTimeout(qualTick, 1000); return; }
+  const i = 'q' + (++qual.i); qual.sent[i] = performance.now();
+  try { ws.send(JSON.stringify({t: 'ping', i, q: 1})); } catch(e){}
+  setTimeout(() => { if (qual.sent[i]) { delete qual.sent[i]; qual.rtts.push(9999); qualShow(); } }, 1500);
+  qual.t = setTimeout(qualTick, 1000);
+}
+function qualPong(i){ const t0 = qual.sent[i]; if (!t0) return; delete qual.sent[i]; qual.rtts.push(performance.now() - t0); qualShow(); }
+function qualShow(){
+  const last = qual.rtts.slice(-5); if (last.length < 2) return;
+  const srt = [...last].sort((a, b) => a - b), med = srt[srt.length >> 1], lost = last.filter(r => r >= 9999).length;
+  const jit = srt[srt.length - 1 - lost] - srt[0];
+  const k = (!lost && med < 200 && jit < 60) ? 'a' : (lost <= 1 && med < 400 && jit < 150) ? 'b' : 'c';
+  const q = $('#qual'); q.className = 'qual ' + k;
+  q.textContent = k === 'a' ? 'Fluide' : k === 'b' ? 'Correct' : 'Instable · saccades normales';
+  if (state === 'slow' && k !== 'c') setState('ok');   // « Internet lent » s'efface des que ca va mieux
+}
 function probeTick(){
   if (!probe.on || !ready || !ws) return;
   const i = ++probe.i; probe.sent[i] = performance.now();
@@ -896,12 +922,12 @@ function probeJudge(){
   if (!probe.on) return;
   const last = probe.rtts.slice(-6);
   if (last.length >= 6 && last.every(r => r < 350) && Math.max(...last) - Math.min(...last) < 200) {
-    probeStop(); probe.hops = 0; setState('good'); return;   // 6 allers-retours de suite rapides et reguliers
+    probeStop(); probe.hops = 0; setState('good'); qualStart(); return;   // 6 allers-retours de suite rapides et reguliers
   }
   // Toujours mauvais apres 12 s : on change de serveur relais (par internet seulement), 2 fois au plus
   if (pc().key && performance.now() - probe.since > 12000) {
     if (probe.hops < 2) { probe.hops++; const r = relayOf(pc()); r.bi = (r.wi + 1) % r.B.length; store.set('broker', r.bi); r.drop(); connect(); }
-    else { probeStop(); setState('slow'); }
+    else { probeStop(); setState('slow'); qualStart(); }
   }
 }
 
@@ -909,7 +935,7 @@ function probeJudge(){
 let ws = null, ready = false, mx = 0, my = 0, sy = 0, raf = 0, retry = 0;
 function connect(){
   if (ws) { const old = ws; ws = null; try { old.close(); } catch(e){} }
-  ready = false; clearTimeout(retry); hideHeld(); TX = TY = 0;   // nouveaux totaux a chaque connexion
+  ready = false; clearTimeout(retry); hideHeld(); qualStop(); TX = TY = 0;   // nouveaux totaux a chaque connexion
   if (!pin) { setState('idle'); return; }
   if (navigator.onLine === false) { setState('net'); return; }
   setState(state === 'bad' ? 'bad' : 'wait');
@@ -919,7 +945,7 @@ function connect(){
   sock.onopen = () => sock.send(JSON.stringify({token: pin}));
   sock.onmessage = e => {
     const m = JSON.parse(e.data);
-    if (m.t === 'pong') probePong(m.i);
+    if (m.t === 'pong') { probePong(m.i); qualPong(m.i); }
     else if (m.t === 'mt') gotTail(m);
     else if (CTRL.includes(m.t)) onCtrl(m);
     else if (m.auth === true) { ready = true; if (m.busy) showHeld('busy'); else hideHeld(); probeStart(); }
@@ -927,7 +953,7 @@ function connect(){
   };
   sock.onclose = () => {
     if (ws !== sock) return;
-    ready = false; probeStop(); if (!pin) return;
+    ready = false; probeStop(); qualStop(); if (!pin) return;
     setState(navigator.onLine === false ? 'net' : 'bad');
     retry = setTimeout(() => { if (ws === sock) connect(); }, 1200);
   };
