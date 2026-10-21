@@ -891,7 +891,7 @@ function connect(){
     retry = setTimeout(() => { if (ws === sock) connect(); }, 1200);
   };
 }
-let lastTx = 0, TX = 0, TY = 0;
+let lastTx = 0, TX = 0, TY = 0, tailT = 0;
 function frame(){
   raf = 0;
   if (!ready) { mx = my = sy = 0; return; }
@@ -901,7 +901,12 @@ function frame(){
   const ix = Math.trunc(mx), iy = Math.trunc(my), is = Math.trunc(sy);
   if (ix || iy) {
     // Par internet (PC recent), on joint le total depuis le debut : un paquet perdu par le relais est rattrape.
-    if (pc().key && relayOf(pc()).cum) { TX += ix; TY += iy; ws.send(`["M",${TX},${TY},${ix},${iy}]`); }
+    if (pc().key && relayOf(pc()).cum) {
+      TX += ix; TY += iy; ws.send(`["M",${TX},${TY},${ix},${iy}]`);
+      // Le dernier paquet peut se perdre sur le serveur relais : on renvoie le total une fois le geste fini
+      // (sans effet s'il etait bien arrive, le PC ne bouge que de la difference).
+      clearTimeout(tailT); tailT = setTimeout(() => { if (ready && ws) ws.send(`["M",${TX},${TY},0,0]`); }, 180);
+    }
     else ws.send(`["m",${ix},${iy}]`);
     mx -= ix; my -= iy;
   }
