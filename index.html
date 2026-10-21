@@ -1185,8 +1185,8 @@ const FLOWS = {
   ],
 };
 const flow = standalone ? 'app' : 'web';
-// Sur le site public, l'icone d'ecran d'accueil est facultative : on saute cette etape.
-const S = HOSTED && flow === 'web' ? FLOWS.web.slice(0, 2) : FLOWS[flow];
+// L'icone d'ecran d'accueil garde le lien complet (avec la cle) : on guide son ajout, aussi sur le site public.
+const S = FLOWS[flow];
 $('#introTag').textContent = standalone ? 'Installé' : 'Bienvenue';
 $('#prog').innerHTML = S.length > 1 ? S.map(() => '<i></i>').join('') : '';
 $('#prog').style.gridTemplateColumns = 'repeat(' + S.length + ',1fr)';
@@ -1234,7 +1234,7 @@ if (dq.has('direct')) {
 }
 let skipInstall = false; try { skipInstall = sessionStorage.getItem('skipInstall') === '1'; } catch (e) {}
 if (!store.get(doneKey, false)) { paintIntro(); $('#intro').classList.remove('hidden'); }
-else if (flow === 'web' && !skipInstall && !HOSTED) {
+else if (flow === 'web' && !skipInstall) {
   // Seule l'etape de l'icone revient : pas de barre ni de « 03 / 03 », qui feraient croire a un parcours.
   slide = S.length - 1; paintIntro();
   $('#prog').style.visibility = 'hidden'; $$('#slides .idx').forEach(e => e.remove());
