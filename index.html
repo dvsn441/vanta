@@ -1193,6 +1193,10 @@ const FLOWS = {
      cta: 'Taper le code'},
   ],
 };
+// Icone ouverte sans la cle du PC (rien a piloter) : on fait scanner le QR code au lieu de promettre un code.
+if (pc().none && HOSTED) FLOWS.app = [{art: artDone, h: 'Vanta est installé.',
+  p: 'Dernière étape : scanne ici le <b>QR code affiché par Vanta sur ton ordinateur</b>. Ensuite, tape le code qui apparaît en haut à gauche de son écran.',
+  cta: 'Scanner le QR code', scan: true}];
 const flow = standalone ? 'app' : 'web';
 // Sur le site public aussi, on guide jusqu'a l'icone d'ecran d'accueil (elle rouvre le lien avec la cle).
 const S = FLOWS[flow];
@@ -1219,7 +1223,7 @@ function paintIntro(){
 }
 const doneKey = flow === 'app' ? 'appWelcomed' : 'introDone';
 function closeIntro(){ store.set(doneKey, true); $('#intro').classList.add('hidden'); if (!pin) showLock(); }
-$('#introNext').onclick = () => { tick(); if (slide < S.length - 1) { slide++; paintIntro(); } else closeIntro(); };
+$('#introNext').onclick = () => { tick(); if (slide < S.length - 1) { slide++; paintIntro(); } else { closeIntro(); if (S[slide].scan) startScan(); } };
 // « Passer » saute les explications, jamais l'etape de l'ecran d'accueil.
 $('#introSkip').onclick = () => {
   if (flow === 'web' && !S[slide].final) { slide = S.length - 1; paintIntro(); return; }
