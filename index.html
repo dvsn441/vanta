@@ -1,0 +1,1256 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vanta">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="icon-180.png?v=4">
+<link rel="icon" type="image/png" href="icon-180.png?v=4">
+<link rel="manifest" href="manifest.webmanifest?v=5">
+<title>Vanta</title>
+<style>
+/* Vanta — direction « instrument » : noir absolu, filets d'un pixel, angles droits, typographie
+   Futura / DIN (natives sur iPhone). Un seul accent : le bleu du point du logo. Aucun arrondi, aucune ombre. */
+:root{
+  --bg:#000;
+  --ink:#F2F2F0;
+  --ink2:#8A8A8E;
+  --ink3:#4A4A4E;
+  --rule:#1C1C1F;
+  --rule2:#2A2A2E;
+  --press:#0E0E10;
+  --blue:#0A84FF;
+  --ember:#0A84FF;
+  --alert:#FF3B30;
+  --out:cubic-bezier(.2,.8,.2,1);
+  --spring:cubic-bezier(.2,.8,.2,1);
+  --gut:20px;
+  --f-disp:"Futura","Century Gothic","Avenir Next",sans-serif;
+  --f-text:"Avenir Next","Avenir","Segoe UI",sans-serif;
+  --f-num:"DIN Alternate","DIN Condensed","Bahnschrift","Avenir Next",sans-serif;
+}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{height:100%;background:var(--bg);color:var(--ink);overscroll-behavior:none;overflow:hidden}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{position:fixed;inset:0;font:15px/1.35 var(--f-text);-webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column;touch-action:none;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+button{font:inherit;color:inherit;background:none;border:0;border-radius:0;padding:0;cursor:pointer;touch-action:manipulation}
+button:focus{outline:none}
+button:focus-visible{outline:1px solid var(--blue);outline-offset:-1px}
+svg{display:block}
+.ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter;flex:none}
+.cap{font-family:var(--f-disp);font-size:10.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase}
+
+/* ------------------------------------------------------------- bandeau d'etat */
+.status{position:absolute;top:calc(env(safe-area-inset-top) + 14px);left:var(--gut);right:var(--gut);z-index:4;
+  display:flex;align-items:center;gap:10px;padding:10px 12px;background:#000;border:1px solid var(--rule2);
+  font-family:var(--f-disp);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);white-space:nowrap;overflow:hidden;
+  opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .15s var(--out),transform .15s var(--out)}
+.status.on{opacity:1;transform:none}
+.status .ico{width:14px;height:14px;color:var(--ink2)}
+.status.bad{border-color:var(--alert)}
+.status.bad .ico{color:var(--alert)}
+.spin{animation:spin 1.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ------------------------------------------------------------- vues */
+.views{flex:1;position:relative;min-height:0}
+.view{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .14s linear}
+.view.on{opacity:1;pointer-events:auto}
+
+/* ------------------------------------------------------------- surface tactile */
+.pad{position:relative;overflow:hidden;touch-action:none;background:#000;margin:12px var(--gut) 0;border:1px solid var(--rule)}
+/* reperes d'angle, comme sur un viseur */
+.pad::before{content:"";position:absolute;inset:14px;pointer-events:none;
+  background:
+    linear-gradient(var(--ink3),var(--ink3)) 0 0/14px 1px no-repeat,linear-gradient(var(--ink3),var(--ink3)) 0 0/1px 14px no-repeat,
+    linear-gradient(var(--ink3),var(--ink3)) 100% 0/14px 1px no-repeat,linear-gradient(var(--ink3),var(--ink3)) 100% 0/1px 14px no-repeat,
+    linear-gradient(var(--ink3),var(--ink3)) 0 100%/14px 1px no-repeat,linear-gradient(var(--ink3),var(--ink3)) 0 100%/1px 14px no-repeat,
+    linear-gradient(var(--ink3),var(--ink3)) 100% 100%/14px 1px no-repeat,linear-gradient(var(--ink3),var(--ink3)) 100% 100%/1px 14px no-repeat}
+.pad::after{content:"";position:absolute;inset:0;pointer-events:none;border:1px solid var(--blue);opacity:0;transition:opacity .12s linear}
+.pad.drag::after{opacity:1}
+#pad{flex:1}
+.bloom{display:none}
+
+/* point de contact : le point bleu du logo, avec un reticule qui traverse la surface */
+.halo{position:absolute;left:0;top:0;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--blue);
+  pointer-events:none;opacity:0;transition:opacity .25s linear;will-change:transform,opacity}
+.halo::before,.halo::after{content:"";position:absolute;background:rgba(242,242,240,.10)}
+.halo::before{left:-200vw;right:-200vw;top:4.5px;height:1px}
+.halo::after{top:-200vh;bottom:-200vh;left:4.5px;width:1px}
+.halo.on{opacity:1;transition:opacity .06s linear}
+.pad.drag .halo{background:var(--ink)}
+.pad.drag .halo::before,.pad.drag .halo::after{background:rgba(10,132,255,.45)}
+
+.tap{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border:1px solid var(--blue);pointer-events:none;animation:tap .3s var(--out) forwards}
+.tap.r{border-color:var(--ink)}
+@keyframes tap{from{transform:scale(.5);opacity:1}to{transform:scale(1.4);opacity:0}}
+
+.rail{position:absolute;right:14px;top:50%;width:1px;height:140px;margin-top:-70px;background:var(--rule2);opacity:0;transition:opacity .2s linear;pointer-events:none}
+.rail i{position:absolute;left:-1px;right:-1px;top:50%;height:28px;margin-top:-14px;background:var(--blue);transition:transform .2s var(--out)}
+.rail.on{opacity:1;transition:none}
+.rail.on i{transition:none}
+
+.badge{position:absolute;top:14px;left:50%;display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--blue);color:#fff;
+  font-family:var(--f-disp);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  transform:translate(-50%,-4px);opacity:0;transition:opacity .12s linear,transform .12s var(--out);pointer-events:none}
+.badge .ico{width:13px;height:13px}
+.pad.drag .badge{opacity:1;transform:translate(-50%,0)}
+
+/* mode d'emploi : une legende technique, pas des bulles */
+.hint{position:absolute;left:28px;right:28px;bottom:30px;display:flex;flex-direction:column;gap:9px;pointer-events:none;transition:opacity .3s linear}
+.hint.gone{opacity:0}
+.hint p{display:block;position:relative;padding-left:30px;font-family:var(--f-disp);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink2)}
+.hint p b{position:absolute;left:0;top:0;font:500 10px var(--f-num);letter-spacing:.06em;color:var(--blue)}
+.hint p span{margin-left:.6em;color:var(--ink3)}
+
+/* ------------------------------------------------------------- clavier */
+#vMain{gap:0}
+.kbd-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--ink3);pointer-events:none;transition:opacity .2s linear;
+  font-family:var(--f-disp);font-size:10px;letter-spacing:.22em;text-transform:uppercase}
+.kbd-hint .ico{display:none}
+.acc{flex:none;display:flex;flex-direction:column;margin:0 var(--gut)}
+.line{display:flex;height:56px;border-bottom:1px solid var(--rule)}
+.field{position:relative;flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:0 4px}
+.field .ico{display:none}
+.field::before{content:"›";font:400 22px var(--f-disp);color:var(--ink3);margin-top:-2px}
+.kb .field::before{color:var(--blue)}
+.field .txt{flex:1;min-width:0;font:400 19px var(--f-text);white-space:pre;overflow:hidden}
+.field .ph{font-family:var(--f-disp);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink3);vertical-align:3px}
+.caret{display:none;width:1px;height:21px;margin-left:1px;vertical-align:-4px;background:var(--blue);animation:blink 1s steps(1) infinite}
+.kb .caret{display:inline-block}
+@keyframes blink{50%{opacity:0}}
+#typer{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0 16px;border:0;resize:none;overflow:hidden;opacity:.011;
+  font:16px/56px -apple-system,system-ui,sans-serif;background:none;color:transparent;caret-color:transparent;-webkit-user-select:text;user-select:text;outline:none}
+.kbhide{display:none;flex:none;width:56px;align-items:center;justify-content:center;color:var(--ink2);border-left:1px solid var(--rule)}
+.kb .kbhide{display:flex}
+.keys{display:grid;grid-template-columns:repeat(8,1fr)}
+.key{position:relative;height:52px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  font-family:var(--f-disp);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);transition:background .1s linear}
+.key:last-child{border-right:0}
+.key .ico{width:17px;height:17px}
+.key.press,.kbhide.press{background:var(--press);color:var(--blue);transition:none}
+.kb{padding-bottom:6px}
+.kb .dock{display:none}
+.short .acc{flex-direction:row}
+.short .line{flex:1;min-width:0;height:48px;border-bottom:0;border-right:1px solid var(--rule)}
+.short .keys{flex:none;width:min(440px,56%)}
+.short .key{height:48px;border-bottom:0}
+
+/* ------------------------------------------------------------- barre basse */
+.dock{flex:none;display:flex;align-items:stretch;height:58px;margin:0 var(--gut);border-top:1px solid var(--rule)}
+.pcbtn{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:0 18px 0 2px;
+  font-family:var(--f-disp);font-size:11px;letter-spacing:.2em;text-transform:uppercase;transition:color .12s linear}
+.pcbtn:active{color:var(--ink2)}
+.pcbtn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcbtn .ico{width:11px;height:11px;color:var(--ink3);stroke-width:1.8}
+.led{width:6px;height:6px;border-radius:50%;flex:none;background:var(--ink3);transition:background .3s}
+.led.ok{background:var(--blue)}
+.led.wait{animation:pulse 1.2s ease-in-out infinite}
+.led.bad{background:var(--alert)}
+@keyframes pulse{50%{opacity:.2}}
+.devbtn{flex:none;padding:0 2px 0 18px;border-left:1px solid var(--rule);color:var(--ink2);
+  font-family:var(--f-disp);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;transition:color .12s linear}
+.devbtn:active{color:var(--blue)}
+.seg{flex:1;position:relative;display:grid;grid-template-columns:1fr 1fr}
+.seg .thumb{position:absolute;top:-1px;left:0;width:50%;height:2px;background:var(--blue);transition:transform .22s var(--out)}
+.seg.right .thumb{transform:translateX(100%)}
+.seg button{position:relative;display:flex;align-items:center;justify-content:center;gap:9px;color:var(--ink3);
+  font-family:var(--f-disp);font-size:11px;letter-spacing:.2em;text-transform:uppercase;transition:color .12s linear}
+.seg button[aria-selected="true"]{color:var(--ink)}
+.seg .ico{display:none}
+
+/* ------------------------------------------------------------- choix de l'ordinateur */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.72);opacity:0;pointer-events:none;transition:opacity .18s linear;z-index:6}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;z-index:7;left:0;right:0;bottom:0;padding:0 var(--gut) calc(env(safe-area-inset-bottom) + 8px);background:#000;border-top:1px solid var(--rule2);
+  display:flex;flex-direction:column;transform:translateY(100%);transition:transform .22s var(--out)}
+.sheet.on{transform:none;transition:transform .32s var(--out)}
+.group{display:flex;flex-direction:column}
+.group h2{padding:22px 2px 12px;font-family:var(--f-disp);font-size:10px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--ink3)}
+.row{width:100%;display:flex;align-items:center;gap:14px;padding:0 2px;height:58px;text-align:left;border-top:1px solid var(--rule);
+  font-family:var(--f-disp);font-size:13px;letter-spacing:.14em;text-transform:uppercase;transition:background .1s linear}
+.row:active{background:var(--press)}
+.row .grow{flex:1}
+.row .ico{color:var(--ink3);width:16px;height:16px}
+.row .check{color:var(--blue)}
+.row.warn,.row.warn .ico{color:var(--alert)}
+.row.center{justify-content:center;color:var(--ink2);border-bottom:1px solid var(--rule)}
+
+/* ------------------------------------------------------------- ecran de code */
+.lock{position:fixed;inset:0;z-index:10;background:#000;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 22px) calc(env(safe-area-inset-right) + var(--gut)) calc(env(safe-area-inset-bottom) + 14px) calc(env(safe-area-inset-left) + var(--gut));
+  transition:opacity .25s linear}
+.lock.hidden{opacity:0;pointer-events:none}
+.lock-head{flex:1;display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-height:0}
+.brand{display:flex;align-items:center;gap:12px;width:100%;padding-bottom:18px;border-bottom:1px solid var(--rule)}
+.mark{width:26px;height:26px}
+.lock h1{font:500 12px var(--f-disp);letter-spacing:.42em;text-transform:uppercase}
+.brand .cap{margin-left:auto;color:var(--ink3)}
+.lock-title{margin-top:auto;font:500 10.5px var(--f-disp);letter-spacing:.24em;text-transform:uppercase;color:var(--ink3)}
+.lock p{margin-top:10px;font:400 21px/1.25 var(--f-text);color:var(--ink);max-width:300px;min-height:52px;transition:color .2s}
+.lock p.err{color:var(--alert)}
+.dots{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;width:100%;margin:26px 0 26px}
+.dots i{height:2px;background:var(--rule2);transition:background .12s linear,height .12s linear}
+.dots i.f{background:var(--blue);height:4px}
+.dots.err i{background:var(--alert)}
+.dots.shake{animation:shake .4s var(--out)}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-10px)}45%{transform:translateX(8px)}70%{transform:translateX(-4px)}}
+.lock-body{width:100%}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule)}
+.num{height:var(--k,74px);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--rule);
+  font:400 34px var(--f-num);font-variant-numeric:tabular-nums;color:var(--ink);transition:background .12s linear,color .12s linear}
+.num:nth-child(3n+2){border-left:1px solid var(--rule);border-right:1px solid var(--rule)}
+.num.press{background:var(--press);color:var(--blue);transition:none}
+.num.ghost{color:var(--ink2)}
+.num.ghost .ico{width:22px;height:22px}
+.num.blank{visibility:visible;cursor:default}
+.lock-pc{align-self:flex-start;margin-top:16px;display:flex;align-items:center;gap:10px;padding:6px 0;color:var(--ink2);
+  font-family:var(--f-disp);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;transition:color .12s linear}
+.lock-pc:active{color:var(--blue)}
+.lock-pc .ico{width:13px;height:13px}
+.lock-pc[hidden]{display:none}
+.scan{position:fixed;inset:0;z-index:30;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px}
+.scan.hidden{display:none}
+.scan video{width:100%;max-width:420px;aspect-ratio:1;object-fit:cover;border:1px solid var(--blue)}
+.scan p{font:400 17px/1.3 var(--f-text);color:var(--ink);text-align:center;max-width:300px}
+.scan .lock-pc{align-self:center}
+
+/* ------------------------------------------------------------- tailles */
+@media (min-width:700px){
+  :root{--gut:32px}
+  .lock-head,.lock-body,.lock-pc{width:100%;max-width:460px;margin-left:auto;margin-right:auto}
+  .lock-pc{align-self:center}
+  .dock{max-width:620px;margin-left:auto;margin-right:auto;width:100%}
+  .acc{max-width:720px;margin-left:auto;margin-right:auto;width:100%}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .dock{height:46px}
+  .lock{display:grid;grid-template-columns:1fr 1fr;column-gap:40px}
+  .lock-head{grid-column:1}
+  .lock-body{grid-column:2;grid-row:1 / 3;align-self:center}
+  .lock-pc{grid-column:1}
+  .num{--k:52px;font-size:26px}
+  .hint{bottom:16px;gap:6px}
+}
+@media (max-height:700px) and (orientation:portrait){
+  .num{--k:62px;font-size:30px}
+  .lock p{font-size:18px;min-height:46px}
+  .dots{margin:18px 0}
+}
+@media (prefers-reduced-motion:reduce){
+  .status,.status.on,.badge,.pad.drag .badge{transform:none}
+  .sheet{transform:none;opacity:0;pointer-events:none;transition:opacity .18s linear}
+  .sheet.on{opacity:1;pointer-events:auto}
+  .seg .thumb,.rail i{transition:none}
+  .dots.shake,.spin{animation:none}
+  .tap{animation-name:fade}
+  @keyframes fade{from{opacity:1}to{opacity:0}}
+}
+
+/* ------------------------------------------------------------- prise en main (premiere ouverture) */
+.intro{position:fixed;inset:0;z-index:12;background:#000;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 22px) calc(env(safe-area-inset-right) + var(--gut)) calc(env(safe-area-inset-bottom) + 16px) calc(env(safe-area-inset-left) + var(--gut));
+  transition:opacity .3s linear}
+.intro.hidden{opacity:0;pointer-events:none}
+/* Sinon la diapo active (pointer-events:auto) reste cliquable par-dessus le pave du code. */
+.intro.hidden *,.lock.hidden *{pointer-events:none!important}
+.intro .brand{flex:none}
+.prog{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:22px}
+.prog i{height:2px;background:var(--rule2);transition:background .2s linear}
+.prog i.on{background:var(--blue)}
+.slides{flex:1;position:relative;min-height:0}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;opacity:0;transform:translateX(18px);pointer-events:none;transition:opacity .25s linear,transform .3s var(--out)}
+.slide.on{opacity:1;transform:none;pointer-events:auto}
+.slide.past{transform:translateX(-18px)}
+.slide .idx{font:400 13px var(--f-num);letter-spacing:.08em;color:var(--blue)}
+.slide h2{margin:12px 0 0;font:400 30px/1.12 var(--f-disp);letter-spacing:-.01em;max-width:13em}
+.slide p{margin:14px 0 0;font:400 17px/1.45 var(--f-text);color:var(--ink2);max-width:24em}
+.slide p b{color:var(--ink);font-weight:500}
+.art{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+.art svg{max-width:100%;max-height:100%}
+.share{display:inline-block;width:15px;height:18px;vertical-align:-3px;margin:0 2px}
+.lock-art{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:18px 0}
+.lock-art svg{width:min(100%,300px);height:auto;max-height:100%}
+.lock-title{margin-top:0!important}
+.steps-i{list-style:none;margin:16px 0 0;padding:0;counter-reset:s;display:grid;gap:12px}
+.steps-i li{counter-increment:s;display:grid;grid-template-columns:28px 1fr;font:400 16.5px/1.4 var(--f-text);color:var(--ink2)}
+.steps-i li::before{content:counter(s);font:500 17px var(--f-num);color:var(--blue)}
+.steps-i li b{color:var(--ink);font-weight:500}
+.steps-i li.last{color:var(--ink)}
+.intro-foot{flex:none;display:flex;align-items:center;gap:16px;margin-top:26px;padding-top:16px;border-top:1px solid var(--rule)}
+.intro-foot .skip{color:var(--ink3);font-family:var(--f-disp);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;padding:8px 0}
+.intro-foot .next{margin-left:auto;height:52px;padding:0 26px;background:var(--ink);color:#000;font-family:var(--f-disp);font-size:11px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;transition:background .12s linear,color .12s linear}
+.intro-foot .next:active{background:var(--blue);color:#fff}
+@media (max-height:700px){.slide h2{font-size:25px}.slide p{font-size:15.5px}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-pointer" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><path d="M12 4.5v6"/><path d="M3.5 10.5h17"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M8 14h8"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m7 14.5 5-5 5 5"/></symbol>
+    <symbol id="i-tap" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 4v2M12 18v2M4 12h2M18 12h2"/></symbol>
+    <symbol id="i-two" viewBox="0 0 24 24"><circle cx="8.5" cy="12" r="3"/><circle cx="15.5" cy="12" r="3"/></symbol>
+    <symbol id="i-scroll" viewBox="0 0 24 24"><path d="M12 3.5v17"/><path d="m8 7.5 4-4 4 4M8 16.5l4 4 4-4"/></symbol>
+    <symbol id="i-drag" viewBox="0 0 24 24"><path d="M12 3.5v17M3.5 12h17"/><path d="m9.5 6 2.5-2.5L14.5 6M9.5 18l2.5 2.5 2.5-2.5M6 9.5 3.5 12 6 14.5M18 9.5l2.5 2.5-2.5 2.5"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 7V5.5h14V7"/><path d="M12 5.5v13"/><path d="M9 18.5h6"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M9 5.5h10.5a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H9L3 12z"/><path d="m11.5 9.5 5 5m0-5-5 5"/></symbol>
+    <symbol id="i-enter" viewBox="0 0 24 24"><path d="M19.5 5v6.5a2 2 0 0 1-2 2H5"/><path d="m9 9.5-4 4 4 4"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="m6 14.5 6-6 6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9.5 6 6 6-6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5V6.5A2 2 0 0 0 13.5 4.5h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></symbol>
+    <symbol id="i-paste" viewBox="0 0 24 24"><path d="M9 4.5h6v3H9z"/><path d="M15 6h2a2 2 0 0 1 2 2v10.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/></symbol>
+    <symbol id="i-kbdown" viewBox="0 0 24 24"><rect x="3" y="3.5" width="18" height="11" rx="2.5"/><path d="M7 7.5h.01M10.5 7.5h.01M14 7.5h.01M17 7.5h.01M8.5 11h7"/><path d="m9 18 3 2.5 3-2.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4.5 19.5h4l10-10a2.8 2.8 0 0 0-4-4l-10 10z"/><path d="m13.5 6.5 4 4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+    <symbol id="i-desk" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2.5"/><path d="M9 20h6M12 16.5V20"/></symbol>
+    <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.35-5.65"/><path d="M20 4.5v4h-4"/></symbol>
+    <symbol id="i-offline" viewBox="0 0 24 24"><path d="M2.5 9a14 14 0 0 1 6-3.2M21.5 9a14 14 0 0 0-8.2-3.7"/><path d="M5.5 12.5a9.5 9.5 0 0 1 3.3-2M18.5 12.5a9.5 9.5 0 0 0-2.2-1.6"/><path d="M9 16a4.5 4.5 0 0 1 6 0"/><path d="M12 19.5h.01"/><path d="m3.5 3.5 17 17"/></symbol>
+  </defs>
+</svg>
+
+<div class="status" id="status" role="status" aria-live="polite"><svg class="ico" id="statusIco"><use href="#i-sync"/></svg><span id="statusTxt"></span></div>
+
+<div class="views">
+  <section class="view on" id="vMain" aria-label="Télécommande">
+    <div class="pad" id="pad">
+      <div class="halo"></div>
+      <div class="rail"><i></i></div>
+      <div class="badge"><svg class="ico"><use href="#i-drag"/></svg>Glisser-déposer</div>
+      <div class="hint" id="hint">
+        <p><b>01</b>Toucher <span>— clic</span></p>
+        <p><b>02</b>Deux doigts <span>— clic droit</span></p>
+        <p><b>03</b>Un doigt bouge, l’autre tape <span>— clic</span></p>
+        <p><b>04</b>Glisser à deux doigts <span>— défiler</span></p>
+        <p><b>05</b>Double toucher, glisser <span>— déplacer</span></p>
+      </div>
+    </div>
+    <div class="acc">
+      <div class="line">
+        <label class="field" id="field">
+          <svg class="ico"><use href="#i-keyboard"/></svg>
+          <div class="txt"><span id="echo"></span><span class="ph" id="ph">Toucher pour écrire</span><i class="caret"></i></div>
+          <textarea id="typer" rows="1" autocomplete="off" autocorrect="on" autocapitalize="sentences" spellcheck="true" enterkeyhint="enter" aria-label="Saisie envoyée au PC"></textarea>
+        </label>
+        <button class="kbhide" id="kbHide" aria-label="Masquer le clavier"><svg class="ico"><use href="#i-kbdown"/></svg></button>
+      </div>
+      <div class="keys">
+        <button class="key" data-key="esc">Échap</button>
+        <button class="key" data-key="tab">Tab</button>
+        <button class="key" data-key="ctrl+c" aria-label="Copier (Ctrl C)"><svg class="ico"><use href="#i-copy"/></svg></button>
+        <button class="key" data-key="ctrl+v" aria-label="Coller (Ctrl V)"><svg class="ico"><use href="#i-paste"/></svg></button>
+        <button class="key" data-key="left" data-repeat aria-label="Gauche"><svg class="ico"><use href="#i-left"/></svg></button>
+        <button class="key" data-key="up" data-repeat aria-label="Haut"><svg class="ico"><use href="#i-up"/></svg></button>
+        <button class="key" data-key="down" data-repeat aria-label="Bas"><svg class="ico"><use href="#i-down"/></svg></button>
+        <button class="key" data-key="right" data-repeat aria-label="Droite"><svg class="ico"><use href="#i-right"/></svg></button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<nav class="dock">
+  <button class="pcbtn" id="pcBtn" aria-haspopup="dialog"><i class="led" id="led"></i><span id="pcName">—</span><svg class="ico"><use href="#i-chev"/></svg></button>
+  <button class="devbtn" id="devBtn" aria-haspopup="dialog">Appareils</button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-label="Choisir l'ordinateur">
+  <div class="group" id="pcGroup"></div>
+  <div class="group"><button class="row center" id="cancel">Annuler</button></div>
+</div>
+
+
+<div class="intro hidden" id="intro" role="dialog" aria-label="Prise en main de Vanta">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 1024 1024" aria-hidden="true"><path d="M300 360 L512 700 L724 360" fill="none" stroke="#fff" stroke-width="104" stroke-linecap="round" stroke-linejoin="round"/><circle cx="512" cy="300" r="52" fill="#0A84FF"/></svg>
+    <h1 style="font:500 12px var(--f-disp);letter-spacing:.42em;text-transform:uppercase">Vanta</h1>
+    <span class="cap" id="introTag" style="margin-left:auto;color:var(--ink3)">Bienvenue</span>
+  </div>
+  <div class="prog" id="prog"></div>
+  <div class="slides" id="slides"></div>
+  <div class="intro-foot">
+    <button class="skip" id="introSkip">Passer</button>
+    <button class="next" id="introNext">Suivant</button>
+  </div>
+</div>
+
+<div class="lock hidden" id="lock">
+  <div class="lock-head">
+    
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 1024 1024" aria-hidden="true"><path d="M300 360 L512 700 L724 360" fill="none" stroke="#fff" stroke-width="104" stroke-linecap="round" stroke-linejoin="round"/><circle cx="512" cy="300" r="52" fill="#0A84FF"/></svg>
+      <h1>Vanta</h1>
+      <span class="cap">Remote</span>
+    </div>
+    <div class="lock-art" aria-hidden="true"><svg viewBox="0 0 240 150">
+      <rect x="1" y="1" width="238" height="128" fill="none" stroke="#2A2A2E"/><path d="M100 129v16h40v-16M84 149h72" fill="none" stroke="#2A2A2E"/>
+      <rect x="8" y="8" width="70" height="30" fill="#0B0B0D" stroke="#0A84FF"/>
+      <text x="14" y="19" fill="#8A8A8E" font-size="5.5" letter-spacing="1.2" font-family="Futura, Century Gothic, sans-serif">CODE VANTA</text>
+      <text x="14" y="33" fill="#F2F2F0" font-size="12" font-family="DIN Alternate, Bahnschrift, sans-serif">• • •  • • •</text>
+      <path d="M86 23h26" stroke="#0A84FF" stroke-dasharray="2 3"/><text x="116" y="26" fill="#55555A" font-size="7" letter-spacing="1" font-family="Futura, Century Gothic, sans-serif">ICI, SUR TON ORDINATEUR</text>
+    </svg></div>
+    <div class="lock-title">Appairage</div>
+    <p id="lockMsg">Saisissez le code</p>
+    <div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+  <div class="lock-body">
+    <div class="numpad" id="numpad"></div>
+  </div>
+  <button class="lock-pc" id="lockPc"><svg class="ico"><use href="#i-sync"/></svg><span>Nouveau code</span></button><span id="lockPcName" hidden></span>
+  <button class="lock-pc" id="lockScan" hidden><svg class="ico"><use href="#i-sync"/></svg><span>Scanner le QR code</span></button>
+  <button class="lock-pc" id="lockDirect" hidden><svg class="ico"><use href="#i-sync"/></svg><span>Même Wi-Fi que le PC ? Mode direct</span></button>
+</div>
+<div class="scan hidden" id="scan">
+  <video id="scanVid" playsinline muted></video>
+  <p id="scanTip"></p>
+  <button class="lock-pc" id="scanClose"><span>Fermer</span></button>
+</div>
+
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('jr.' + k); return v === null ? d : JSON.parse(v) }catch(e){ return d } },
+  set(k, v){ try{ localStorage.setItem('jr.' + k, JSON.stringify(v)) }catch(e){} }
+};
+const tick = () => navigator.vibrate && navigator.vibrate(6);
+const icon = id => `<svg class="ico"><use href="#${id}"/></svg>`;
+// Pas de zoom ni de geste systeme parasite (Safari ignore user-scalable).
+['gesturestart','gesturechange','dblclick'].forEach(t => document.addEventListener(t, e => e.preventDefault(), {passive:false}));
+document.addEventListener('touchmove', e => { if (!e.target.closest('.pad')) e.preventDefault(); }, {passive:false});
+
+// ---------- Ordinateurs
+const here = location.origin.startsWith('http') ? location.origin : 'http://localhost:8765';
+// En HTTPS (adresse Tailscale), l'appli reste en cache sur l'iPhone : elle s'ouvre meme si ce PC est eteint.
+const secure = location.protocol === 'https:';
+// Ouverte depuis le site public (QR code) et non servie par un PC : tout passe par le relais Internet.
+const HOSTED = /\.github\.io$/.test(location.hostname);
+// Appareils : rien n'est ecrit en dur. Chaque telephone garde sa propre liste ; au depart elle contient
+// l'ordinateur qui sert la page, plus ceux que cet ordinateur declare dans son config.json ("peers").
+const DEV_KEY = secure ? 'devices' : 'devices-local';
+const clean = u => u.trim().replace(/\/+$/, '');
+let pcs = store.get(DEV_KEY, null) || store.get(secure ? 'pcs-https' : 'pcs', null);
+if (HOSTED) pcs = (pcs || []).filter(p => p.key);  // sur le site public, seuls les PC du relais ont un sens
+if (!pcs || !pcs.length) pcs = HOSTED ? [] : [{name: location.hostname.split('.')[0] || 'Cet ordinateur', url: here}];
+// QR code de Vanta : https://.../vanta/#k=<cle du PC>&n=<nom>&l=<adresse Wi-Fi de secours>
+const qr = new URLSearchParams(location.hash.slice(1));
+if (qr.get('k') && window.crypto && crypto.subtle) {
+  // f = empreinte de l'identite du PC : seul le vrai PC peut ouvrir une session avec ce telephone
+  const k = qr.get('k'), fp = qr.get('f') || '', name = qr.get('n') || 'Ordinateur', lan = qr.get('l') || '';
+  // b = serveurs relais du PC, seulement s'ils sont changes dans son config.json (tests, relais a soi)
+  const brokers = (qr.get('b') || '').split(' ').filter(u => /^wss?:\/\//.test(u));
+  const m = pcs.find(p => p.key === k);
+  if (m) { m.name = name; m.lan = lan; m.brokers = brokers; m.fp = fp; } else pcs.push({name, key: k, fp, lan, brokers, url: 'relay:' + k.slice(0, 12)});
+  store.set('cur', pcs.findIndex(p => p.key === k));
+  // Icone d'ecran d'accueil : elle rouvre ce lien complet (avec la cle), pas la page nue.
+  try {
+    const abs = f => new URL(f, location.href).href;
+    const man = {name: 'Vanta', short_name: 'Vanta', start_url: location.href, display: 'standalone', background_color: '#000000', theme_color: '#000000',
+      icons: [{src: abs('icon-180.png'), sizes: '180x180', type: 'image/png'}, {src: abs('icon-512.png'), sizes: '512x512', type: 'image/png'}]};
+    document.querySelector('link[rel=manifest]').href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(man));
+  } catch(e){}
+}
+if (!pcs.length) pcs = [{name: 'Aucun PC', url: 'none:', none: true}];  // rien a piloter tant que le QR n'est pas scanne
+const saveDevices = () => store.set(DEV_KEY, pcs.filter(p => !p.none));
+saveDevices();
+function addDevice(name, url){
+  url = clean(url); if (!/^https?:\/\//.test(url)) return false;
+  const m = pcs.find(p => clean(p.url) === url || p.name.toLowerCase() === name.toLowerCase());
+  if (m) { m.url = url; if (name) m.name = name; } else pcs.push({name: name || new URL(url).hostname.split('.')[0], url});
+  saveDevices(); return true;
+}
+if (secure && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (!HOSTED) fetch(here + '/api/ping').then(r => r.json()).then(({name, peers}) => {
+  const self = pcs.find(p => clean(p.url) === clean(here)) || pcs.find(p => p.name.toLowerCase() === (name || '').toLowerCase());
+  if (self) { self.url = here; if (name) self.name = name; } else addDevice(name, here);
+  (peers || []).forEach(p => { if (p && p.url && clean(p.url) !== clean(here) && !(secure && !/^https:/.test(p.url))) addDevice(p.name || '', p.url); });
+  saveDevices(); renderPc();
+}).catch(() => {});
+let cur = Math.min(store.get('cur', 0), pcs.length - 1);
+const pc = () => pcs[cur];
+// Un code par ordinateur : le code tape choisit le PC a piloter.
+// Appairage : le jeton survit 5 min hors de l'appli (aller sur une autre appli, l'iPhone qui la recharge...).
+// Au-dela, un nouveau code est demande.
+const AWAY_MAX = 5 * 60 * 1000;
+const sess = store.get('sess', null);
+const fresh = sess && Date.now() - sess.at < AWAY_MAX;
+const pins = fresh ? (sess.pins || {}) : {};
+if (fresh && typeof sess.cur === 'number' && sess.cur < pcs.length) cur = sess.cur;
+let pin = pins[pc().name] || '';
+const keepSess = () => store.set('sess', Object.keys(pins).length ? {pins, cur, at: Date.now()} : null);
+function savePin(p){ pin = p; if (p) pins[pc().name] = p; else delete pins[pc().name]; keepSess(); }
+setInterval(() => { if (!document.hidden && pin) keepSess(); }, 20000);
+addEventListener('pagehide', keepSess);
+try { localStorage.removeItem('jr.pins'); localStorage.removeItem('jr.pin'); } catch(e){}
+const post = (url, body, ms = 4000) => {
+  const ctl = new AbortController(); setTimeout(() => ctl.abort(), ms);
+  return fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {}), signal: ctl.signal});
+};
+// Demande a chaque PC allume d'afficher un nouveau code sur son ecran.
+// On retient les PC qui ont repondu : un PC eteint ne fait pas attendre la verification du code.
+let live = null;
+function startPairing(){
+  const seen = new Set(); live = null;
+  pcs.forEach((p, i) => {
+    if (p.none) return;
+    if (p.key) return relayOf(p).request({t: 'pair_start'}, 'pair', 8000).then(r => { if (r) { seen.add(i); live = seen; } });
+    post(p.url + '/api/pair/start').then(r => { if (r.ok) { seen.add(i); live = seen; } }).catch(() => {});
+  });
+}
+function cancelPairing(except){
+  pcs.forEach((p, i) => {
+    if (i === except || p.none) return;
+    if (p.key) { if (relayOf(p).ok) relayOf(p).send({t: 'pair_cancel'}); return; }
+    post(p.url + '/api/pair/cancel').catch(() => {});
+  });
+}
+// Verification du code par le relais : meme reponse que /api/pair/confirm ({status, token}).
+function relayConfirm(p, code){
+  return relayOf(p).request({t: 'pair_confirm', code}, 'pair_result', 8000)
+    .then(r => !r ? {status: 0} : r.token ? {status: 200, token: r.token} : {status: r.status || 401});
+}
+
+// ---------- Relais Internet : quand le telephone n'est pas sur le reseau du PC
+// Le PC et le telephone se retrouvent sur un serveur MQTT public. Tout est chiffre et signe avec la
+// cle du QR code : le serveur ne peut ni lire ni envoyer d'ordres. Memes serveurs que relay.py (BROKERS).
+const BROKERS = ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt', 'wss://mqtt.eclipseprojects.io/mqtt'];
+const te = new TextEncoder(), td = new TextDecoder();
+const cat = (a, b) => { const o = new Uint8Array(a.length + b.length); o.set(a); o.set(b, a.length); return o; };
+const hex = b => Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+const b64u = b => btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+// MQTT 3.1.1 reduit au strict necessaire : connexion, abonnement, publication, ping.
+const mq = {
+  len(n){ const o = []; do { let b = n % 128; n = Math.floor(n / 128); if (n) b |= 128; o.push(b); } while (n); return o; },
+  str(s){ const b = te.encode(s); return [b.length >> 8, b.length & 255, ...b]; },
+  pkt(type, body){ return new Uint8Array([type, ...mq.len(body.length), ...body]); },
+  connect(id){ return mq.pkt(0x10, [...mq.str('MQTT'), 4, 2, 0, 30, ...mq.str(id)]); },
+  subscribe(topic){ return mq.pkt(0x82, [0, 1, ...mq.str(topic), 0]); },
+  publish(topic, data){ return mq.pkt(0x30, [...mq.str(topic), ...data]); },
+  ping: new Uint8Array([0xC0, 0]),
+  // Un paquet complet en tete du tampon, ou null s'il n'est pas encore arrive en entier.
+  parse(buf){
+    let n = 0, mul = 1, i = 1, b;
+    do { if (i >= buf.length) return null; b = buf[i++]; n += (b & 127) * mul; mul *= 128; } while (b & 128);
+    if (buf.length < i + n) return null;
+    return {type: buf[0] >> 4, flags: buf[0] & 15, body: buf.subarray(i, i + n), size: i + n};
+  },
+};
+// Chiffre + signe, exactement comme relay.py (classe Box) : HMAC-SHA256 en mode compteur, puis
+// signature HMAC-SHA256 sur 32 octets. Format : nonce (12) + chiffre + signature (32).
+const Box = {
+  async make(raw){
+    const imp = b => crypto.subtle.importKey('raw', b, {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
+    const base = await imp(raw), sub = async l => imp(new Uint8Array(await crypto.subtle.sign('HMAC', base, te.encode(l))));
+    const ke = await sub('vanta-enc'), km = await sub('vanta-mac');
+    const mac = async (k, data) => new Uint8Array(await crypto.subtle.sign('HMAC', k, data));
+    const xor = async (sens, nonce, data) => {
+      const pre = cat(te.encode(sens), nonce), blocks = [];
+      for (let i = 0; i * 32 < data.length; i++) { const c = new Uint8Array(4); new DataView(c.buffer).setUint32(0, i); blocks.push(mac(ke, cat(pre, c))); }
+      const ks = await Promise.all(blocks), out = new Uint8Array(data.length);
+      for (let j = 0; j < data.length; j++) out[j] = data[j] ^ ks[j >> 5][j & 31];
+      return out;
+    };
+    return {
+      async seal(sens, nonce, plain){ const ct = await xor(sens, nonce, plain); return cat(cat(nonce, ct), await mac(km, cat(cat(te.encode(sens), nonce), ct))); },
+      async open(sens, data){
+        if (data.length <= 44) return null;
+        const nonce = data.slice(0, 12), ct = data.slice(12, -32), tag = data.slice(-32);
+        const want = await mac(km, cat(cat(te.encode(sens), nonce), ct));
+        let d = 0; for (let j = 0; j < 32; j++) d |= want[j] ^ tag[j];
+        return d ? null : xor(sens, nonce, ct);
+      },
+    };
+  },
+};
+// Echange de cles Diffie-Hellman (groupe 14 de la RFC 3526, 2048 bits), le meme que relay.py (DH_P).
+// La cle du QR sert seulement a se presenter ; ensuite chaque telephone a SA cle de session, que les
+// autres porteurs du QR ne connaissent pas : ils ne peuvent lire ni le code, ni le jeton, ni la frappe.
+const DH_P = BigInt('0x' +
+  'FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DD' +
+  'EF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED' +
+  'EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F' +
+  '83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B' +
+  'E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA0510' +
+  '15728E5A8AACAA68FFFFFFFFFFFFFFFF');
+const modpow = (b, e, m) => { let r = 1n; b %= m; while (e > 0n) { if (e & 1n) r = r * b % m; b = b * b % m; e >>= 1n; } return r; };
+const i2b = v => Uint8Array.from(v.toString(16).padStart(512, '0').match(/../g), h => parseInt(h, 16));
+class Relay {
+  constructor(key, brokers, fp){
+    this.B = brokers && brokers.length ? brokers : BROKERS; this.fp = fp || '';
+    this.raw = unb64u(key); this.sid = crypto.getRandomValues(new Uint8Array(8)); this.me = hex(this.sid);
+    this.n = 0; this.ws = null; this.ok = false; this.opening = null; this.subs = new Set(); this.q = Promise.resolve();
+    this.bi = store.get('broker', 0) % this.B.length; this.lastRx = 0; this.wi = 0; this.tick = 0;
+    this.ready = (async () => {
+      const h = new Uint8Array(await crypto.subtle.digest('SHA-256', cat(te.encode('vanta-room:'), this.raw)));
+      const room = hex(h).slice(0, 32); this.up = 'vanta/' + room + '/up'; this.down = 'vanta/' + room + '/down';
+      this.box = await Box.make(this.raw);   // cle du QR : seulement pour l'echange "dh"
+      const x = BigInt('0x' + hex(crypto.getRandomValues(new Uint8Array(32)))) | (1n << 255n);
+      this.x = x; this.pub = modpow(2n, x, DH_P); this.sbox = null; this.pcPub = null;
+    })();
+    setInterval(() => this.keepAlive(), 3000);
+  }
+  // Resolue a true des que le PC a repondu sur l'un des serveurs (essayes l'un apres l'autre).
+  open(){
+    if (this.ok) return Promise.resolve(true);
+    if (this.opening) return this.opening;
+    return this.opening = (async () => {
+      await this.ready;
+      for (let k = 0; k < this.B.length; k++) {
+        const i = (this.bi + k) % this.B.length;
+        if (await this.tryBroker(i)) { this.bi = i; store.set('broker', i); return true; }
+      }
+      return false;
+    })().finally(() => { this.opening = null; });
+  }
+  tryBroker(i){
+    return new Promise(done => {
+      let ws, buf = new Uint8Array(0), settled = false;
+      const finish = ok => { if (settled) return; settled = true; clearTimeout(timer); if (!ok) { try { ws.close(); } catch(e){} } done(ok); };
+      const timer = setTimeout(() => finish(false), 5000);
+      try { ws = new WebSocket(this.B[i], 'mqtt'); } catch(e){ return finish(false); }
+      ws.binaryType = 'arraybuffer'; this.ws = ws; this.wi = i;
+      ws.onopen = () => ws.send(mq.connect('vanta-ph-' + this.me + Math.random().toString(36).slice(2, 6)));
+      ws.onmessage = e => {
+        buf = cat(buf, new Uint8Array(e.data)); let p;
+        while ((p = mq.parse(buf))) { buf = buf.slice(p.size); this.packet(ws, p, finish); }
+      };
+      ws.onerror = () => { if (!settled) finish(false); };
+      ws.onclose = () => {
+        if (this.ws === ws) this.ws = null;
+        if (!settled) return finish(false);
+        if (this.ok && !this.ws) { this.ok = false; this.emit({t: 'down'}); }
+      };
+    });
+  }
+  packet(ws, p, finish){
+    if (p.type === 2) {                       // CONNACK : connecte au serveur, on s'abonne
+      if (p.body[1] !== 0) return finish(false);
+      ws.send(mq.subscribe(this.down));
+    } else if (p.type === 9) {                // SUBACK : on se presente au PC (echange de cles)
+      this.sendText(JSON.stringify({t: 'dh', pub: this.pub.toString(16)}), true);
+    } else if (p.type === 3) {                // PUBLISH : un message du PC
+      const tl = (p.body[0] << 8) | p.body[1], off = 2 + tl + (((p.flags >> 1) & 3) ? 2 : 0);
+      const data = p.body.slice(off);
+      this.q = this.q.then(() => this.decrypt(data)).then(async r => {
+        if (!r || r.m.to !== this.me) return;
+        const m = r.m;
+        if (r.qr) {
+          // Sous la cle du QR, seuls "dh" et "rekey" sont acceptes : un autre porteur du QR ne peut rien injecter d'autre.
+          if (m.t === 'rekey') { if (this.ok && this.ws === ws) { try { ws.close(); } catch(e){} } return; }
+          if (m.t !== 'dh' || this.ws !== ws) return;
+          let y, id; try { y = BigInt('0x' + m.pub); id = BigInt('0x' + m.id); } catch(e){ return; }
+          if (y <= 1n || y >= DH_P - 1n || id <= 1n || id >= DH_P - 1n) return;
+          if (!this.sbox || this.pcPub !== y) {   // nouvelle session (premiere fois, ou PC relance)
+            // 1) l'identite annoncee doit etre celle du QR (empreinte f)
+            const idh = new Uint8Array(await crypto.subtle.digest('SHA-256', i2b(id))).slice(0, 16);
+            if (b64u(idh) !== this.fp) return;
+            // 2) cle de session : echange ephemere + echange avec l'identite du PC (seul le vrai PC la connait)
+            const shared = modpow(y, this.x, DH_P), sharedId = modpow(id, this.x, DH_P);
+            const k = new Uint8Array(await crypto.subtle.digest('SHA-256', [te.encode('vanta-sess'), this.raw, this.sid,
+              i2b(this.pub), i2b(y), i2b(id), i2b(shared), i2b(sharedId)].reduce(cat)));
+            // 3) preuve "c" : un porteur du QR qui se ferait passer pour le PC est rejete ici
+            const ck = await crypto.subtle.importKey('raw', k, {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
+            const c = hex(new Uint8Array(await crypto.subtle.sign('HMAC', ck, cat(te.encode('vanta-ok'), this.sid))));
+            if (c !== m.c) return;
+            this.sbox = await Box.make(k); this.pcPub = y;
+          }
+          this.lastRx = Date.now();
+          if (!this.ok) { this.ok = true; finish(true); }
+          return;
+        }
+        this.lastRx = Date.now();
+        this.emit(m);
+      });
+    }
+  }
+  // Message du PC : d'abord la cle de session de ce telephone, sinon la cle du QR (echange de cles seulement).
+  async decrypt(data){
+    try {
+      if (this.sbox) { const plain = await this.sbox.open('down', data); if (plain) return {m: JSON.parse(td.decode(plain)), qr: false}; }
+      const plain = await this.box.open('down', data);
+      return plain ? {m: JSON.parse(td.decode(plain)), qr: true} : null;
+    } catch(e){ return null; }
+  }
+  // Envoi chiffre, dans l'ordre. iv = identifiant du telephone (8 octets) + compteur (4 octets) : le PC refuse les rejeux.
+  // Tout passe sous la cle de session, sauf l'echange de cles lui-meme (qr = true).
+  sendText(text, qr){
+    const ws = this.ws, box = qr ? this.box : this.sbox; if (!ws || ws.readyState !== 1 || !box) return;
+    const iv = new Uint8Array(12); iv.set(this.sid); new DataView(iv.buffer).setUint32(8, ++this.n);
+    this.q = this.q.then(() => box.seal('up', iv, te.encode(text)))
+      .then(pkt => { if (ws.readyState === 1) ws.send(mq.publish(this.up, pkt)); }).catch(() => {});
+  }
+  send(obj){ this.sendText(JSON.stringify(obj)); }
+  // Attend une reponse du PC d'un type donne ; null si rien dans le delai.
+  request(obj, type, ms){
+    return this.open().then(ok => !ok ? null : new Promise(done => {
+      const off = this.listen(m => { if (m.t === type || m.t === 'down') { off(); clearTimeout(t); done(m.t === type ? m : null); } });
+      const t = setTimeout(() => { off(); done(null); }, ms);
+      this.send(obj);
+    }));
+  }
+  listen(fn){ this.subs.add(fn); return () => this.subs.delete(fn); }
+  emit(m){ [...this.subs].forEach(fn => { try { fn(m); } catch(e){} }); }
+  // Toutes les 3 s : "hello" au PC, qui repond. Un serveur public peut se figer sans fermer la connexion
+  // (il avale les messages) : sans reponse depuis 8 s, on le quitte et on repart sur le serveur SUIVANT
+  // (le PC ecoute les trois). La souris reste donc figee 8 a 13 s au pire, pas 40.
+  keepAlive(){
+    if (!this.ok || !this.ws) return;
+    if (Date.now() - this.lastRx > 8000) {
+      // On n'attend pas la fermeture : un serveur fige ne la confirme jamais. On le lache tout de suite.
+      const dead = this.ws; this.ws = null; this.bi = (this.wi + 1) % this.B.length; store.set('broker', this.bi);
+      try { dead.close(); } catch(e){}
+      if (this.ok) { this.ok = false; this.emit({t: 'down'}); }
+      return;
+    }
+    if (++this.tick % 5 === 0) { try { this.ws.send(mq.ping); } catch(e){} }
+    this.send({t: 'hello'});
+  }
+}
+const relays = {};
+const relayOf = p => relays[p.key] || (relays[p.key] = new Relay(p.key, p.brokers, p.fp));
+
+// ---------- Scanner integre (site public seulement : la camera exige HTTPS)
+// Sur iPhone, l'icone d'ecran d'accueil ne partage rien avec Safari : si elle s'ouvre sans la cle,
+// elle doit pouvoir lire le QR code de Vanta elle-meme. Lecteur natif (Android/Chrome) sinon jsQR 1.4.0,
+// charge seulement a la demande, verifie par son empreinte (integrity) : d'abord la copie publiee a cote de
+// l'appli (meme site GitHub Pages), sinon le CDN. Empreinte verifiee sur le paquet npm officiel jsqr-1.4.0.
+const JSQR = ['jsQR.js', 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'];
+const JSQR_SRI = 'sha384-b5Ya4Bq3qCyz39m2ISh+4DxjAIljdeFwK/BsXLuj9gugaNwAcj/ia15fxNZL9Nlx';
+let scanStream = null;
+const loadOne = src => new Promise((ok, ko) => {
+  const s = document.createElement('script'); s.src = src; s.integrity = JSQR_SRI; s.crossOrigin = 'anonymous';
+  s.onload = ok; s.onerror = () => { s.remove(); ko(); }; document.head.appendChild(s);
+});
+const loadJsQR = () => window.jsQR ? Promise.resolve() : loadOne(JSQR[0]).catch(() => loadOne(JSQR[1]));
+function useScanned(text){
+  let u; try { u = new URL(text); } catch(e){ return false; }
+  // Seuls les QR codes Vanta de ce meme site sont acceptes (ils portent la cle k du PC).
+  if (u.origin !== location.origin || !new URLSearchParams(u.hash.slice(1)).get('k')) { $('#scanTip').textContent = 'Ce n’est pas le QR code de Vanta.'; return false; }
+  stopScan(); history.replaceState(null, '', u.href); location.reload(); return true;
+}
+function stopScan(){ if (scanStream) scanStream.getTracks().forEach(t => t.stop()); scanStream = null; $('#scan').classList.add('hidden'); }
+async function startScan(){
+  const v = $('#scanVid');
+  $('#scanTip').textContent = 'Vise le QR code affiché par Vanta sur l’ordinateur.'; $('#scan').classList.remove('hidden');
+  // Lecteur d'abord, camera ensuite : chaque panne a son propre message (et la bonne solution).
+  let det = null;
+  try { if ('BarcodeDetector' in window) det = new BarcodeDetector({formats: ['qr_code']}); } catch(e){}
+  if (!det) {
+    try { await loadJsQR(); }
+    catch(e){ stopScan(); lockMsg('Lecteur de QR code introuvable (pas d’internet ?). Scanne plutôt avec l’appareil photo du téléphone.', true); return; }
+  }
+  try {
+    scanStream = await navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}, audio: false});
+    v.srcObject = scanStream; await v.play();
+    const cv = document.createElement('canvas'), cx = cv.getContext('2d', {willReadFrequently: true});
+    const tick = async () => {
+      if (!scanStream) return;
+      try {
+        if (v.videoWidth) {
+          if (det) { const r = await det.detect(v); if (r[0] && useScanned(r[0].rawValue)) return; }
+          else {
+            const w = cv.width = Math.min(640, v.videoWidth), h = cv.height = Math.round(v.videoHeight * w / v.videoWidth);
+            cx.drawImage(v, 0, 0, w, h); const r = jsQR(cx.getImageData(0, 0, w, h).data, w, h);
+            if (r && useScanned(r.data)) return;
+          }
+        }
+      } catch(e){}
+      setTimeout(tick, 150);
+    };
+    tick();
+  } catch(e){
+    stopScan(); lockMsg('Caméra indisponible ou refusée. Autorise-la dans Réglages, ou scanne avec l’appareil photo.', true);
+  }
+}
+// Imite un WebSocket vers le PC, pour que connect() serve aux deux chemins.
+function relaySocket(p){
+  const r = relayOf(p), s = {readyState: 0, onopen: null, onmessage: null, onclose: null};
+  let off = () => {};
+  const shut = () => { if (s.readyState === 3) return; s.readyState = 3; off(); s.onclose && s.onclose(); };
+  s.send = text => r.sendText(text);
+  s.close = () => { s.readyState = 3; off(); };
+  r.open().then(ok => {
+    if (s.readyState === 3) return;
+    if (!ok) return shut();
+    off = r.listen(m => { if (m.t === 'down') shut(); else if ('auth' in m) s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth})}); });
+    s.readyState = 1; s.onopen && s.onopen();
+  });
+  return s;
+}
+
+// ---------- Etat de connexion
+let state = 'idle', statusTimer = 0;
+function setState(s){
+  state = s;
+  $('#led').className = 'led' + (s === 'ok' ? ' ok' : s === 'wait' ? ' wait' : s === 'bad' || s === 'net' ? ' bad' : '');
+  const st = $('#status'), txt = $('#statusTxt'), ico = $('#statusIco');
+  clearTimeout(statusTimer);
+  if (s === 'ok' || s === 'idle') { st.classList.remove('on'); return; }
+  const msg = s === 'net' ? ['i-offline', 'Pas de réseau sur l’iPhone', true]
+            : s === 'bad' ? ['i-sync', pc().name + ' hors ligne · nouvel essai…', true]
+            : ['i-sync', 'Connexion à ' + pc().name + '…', false];
+  ico.innerHTML = `<use href="#${msg[0]}"/>`; ico.classList.toggle('spin', msg[0] === 'i-sync');
+  txt.textContent = msg[1]; st.classList.toggle('bad', msg[2]);
+  // Une reconnexion rapide reste silencieuse : on n'affiche qu'apres un court delai.
+  statusTimer = setTimeout(() => st.classList.add('on'), s === 'wait' ? 700 : 0);
+}
+
+// ---------- Canal temps reel (WebSocket), mouvements regroupes a chaque image
+let ws = null, ready = false, mx = 0, my = 0, sy = 0, raf = 0, retry = 0;
+function connect(){
+  if (ws) { const old = ws; ws = null; try { old.close(); } catch(e){} }
+  ready = false; clearTimeout(retry);
+  if (!pin) { setState('idle'); return; }
+  if (navigator.onLine === false) { setState('net'); return; }
+  setState(state === 'bad' ? 'bad' : 'wait');
+  let sock;
+  try { sock = pc().key ? relaySocket(pc()) : new WebSocket(pc().url.replace(/^http/, 'ws') + '/ws'); } catch(e){ setState('bad'); return; }
+  ws = sock;
+  sock.onopen = () => sock.send(JSON.stringify({token: pin}));
+  sock.onmessage = e => {
+    const m = JSON.parse(e.data);
+    if (m.auth === true) { ready = true; setState('ok'); }
+    else if (m.auth === false) { savePin(''); showLock('Session expirée, tape le nouveau code'); }
+  };
+  sock.onclose = () => {
+    if (ws !== sock) return;
+    ready = false; if (!pin) return;
+    setState(navigator.onLine === false ? 'net' : 'bad');
+    retry = setTimeout(() => { if (ws === sock) connect(); }, 1200);
+  };
+}
+let lastTx = 0;
+function frame(){
+  raf = 0;
+  if (!ready) { mx = my = sy = 0; return; }
+  // Par Internet, 40 envois par seconde au plus (les serveurs publics n'aiment pas les rafales).
+  if (pc().key && performance.now() - lastTx < 25) { schedule(); return; }
+  lastTx = performance.now();
+  const ix = Math.trunc(mx), iy = Math.trunc(my), is = Math.trunc(sy);
+  if (ix || iy) { ws.send(`["m",${ix},${iy}]`); mx -= ix; my -= iy; }
+  if (is) { ws.send(`["s",${is}]`); sy -= is; }
+}
+const schedule = () => { if (!raf) raf = requestAnimationFrame(frame); };
+function move(dx, dy){ mx += dx; my += dy; schedule(); }
+function scroll(d){ sy += d; schedule(); }
+function act(action, body){
+  if (raf) { cancelAnimationFrame(raf); lastTx = 0; frame(); }  // garder l'ordre : mouvements d'abord
+  if (ready) ws.send(JSON.stringify(['a', action, body]));
+  else if (pin) setState('bad');
+}
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); keepSess(); return; }
+  if (pin && hiddenAt && Date.now() - hiddenAt > AWAY_MAX) {
+    Object.keys(pins).forEach(k => delete pins[k]); pin = ''; keepSess(); connect(); showLock(); return;
+  }
+  if (!ws || ws.readyState > 1) connect();
+});
+addEventListener('online', () => connect());
+addEventListener('offline', () => { if (pin) setState('net'); });
+
+// ---------- Selecteur d'ordinateur
+function renderPc(){ $('#pcName').textContent = pc().name; $('#lockPcName').textContent = pc().name; }
+function openSheet(){
+  const g = $('#pcGroup'); g.innerHTML = '<h2>Ordinateur à contrôler</h2>';
+  const row = (label, cls, ico, fn, right = '') => {
+    const b = document.createElement('button'); b.className = 'row ' + cls;
+    b.innerHTML = `${icon(ico)}<span class="grow"></span>${right}`; b.querySelector('.grow').textContent = label;
+    b.onclick = () => { closeSheet(); fn(); }; g.appendChild(b); return b;
+  };
+  pcs.forEach((p, i) => row(p.name, '', 'i-desk', () => {
+    if (i === cur) return;
+    cur = i; store.set('cur', i); pin = pins[pc().name] || ''; renderPc(); setState('idle'); connect();
+    if (!pin) showLock();
+  }, i === cur ? `<svg class="ico check"><use href="#i-check"/></svg>` : ''));
+  row('Ajouter un appareil', '', 'i-edit', () => {
+    const url = prompt('Adresse de l’ordinateur (affichée par Vanta à son installation)', 'https://');
+    if (!url || url === 'https://') return;
+    const name = prompt('Nom de cet appareil', '') || '';
+    if (!addDevice(name, url)) { alert('Adresse invalide : elle doit commencer par http:// ou https://'); return; }
+    renderPc(); showLock('Tape le code affiché sur le nouvel appareil');
+  });
+  if (pcs.length > 1) row('Retirer ' + pc().name, 'warn', 'i-lock', () => {
+    if (!confirm('Retirer ' + pc().name + ' de la liste ?')) return;
+    delete pins[pc().name]; pcs.splice(cur, 1); cur = 0; store.set('cur', 0); saveDevices(); keepSess();
+    pin = pins[pc().name] || ''; renderPc(); connect(); if (!pin) showLock();
+  });
+  if (lanOf()) row('Mode direct (même Wi-Fi, plus rapide)', '', 'i-sync', () => $('#lockDirect').onclick());
+  if (pin) row('Verrouiller', '', 'i-lock', () => { savePin(''); connect(); showLock(); });
+  $('#scrim').classList.add('on'); $('#sheet').classList.add('on');
+}
+function closeSheet(){ $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); }
+$('#pcBtn').onclick = openSheet; $('#devBtn').onclick = openSheet; $('#lockPc').onclick = () => { showLock('Nouveau code affiché sur les écrans'); };
+// Mode direct : meme Wi-Fi que le PC, sans relais, latence la plus faible. Un geste, puis le code.
+// #direct : la page du PC saute la prise en main (deja vue sur le site public) et montre tout de suite le clavier du code.
+// Deja appaire par internet : le PC donne, sous la cle de session, un ticket (60 s, usage unique) que la page
+// du PC echange contre un jeton. Pas de nouveau code. Sans ticket (pas encore appaire, relais en panne) : code demande.
+const goDirect = async p => {
+  let t = '';
+  if (pin && ready && p.key) { const r = await relayOf(p).request({t: 'direct'}, 'direct', 4000); t = (r && r.ticket) || ''; }
+  location.href = 'http://' + p.lan + '/#direct' + (t ? '&t=' + encodeURIComponent(t) : '');
+};
+const lanOf = () => HOSTED && pc().key && pc().lan ? pc() : null;
+$('#lockDirect').onclick = () => { const p = lanOf(); if (p && confirm('Passer en direct sur ' + p.name + ' ?\nLe téléphone doit être sur le même Wi-Fi que ce PC.' + (pin && ready ? ' Pas besoin de retaper un code.' : ' Un code te sera demandé.'))) goDirect(p); };
+$('#lockScan').hidden = !HOSTED; $('#lockScan').onclick = startScan; $('#scanClose').onclick = stopScan; $('#scrim').onclick = closeSheet; $('#cancel').onclick = closeSheet;
+
+
+// ---------- Pave tactile
+function trackpad(el, onUse){
+  let start = 0, lx = 0, ly = 0, lt = 0, travel = 0, maxT = 0, lastTap = 0, armed = false, dragging = false;
+  let rect = null, hx = 0, hy = 0, hraf = 0, railY = 0;
+  // Un doigt dirige, un autre doigt pose pendant ce temps = bouton gauche (appui = clic, maintien = glisser).
+  let ptrId = null, clickerId = null, usedClicker = false;
+  const byId = (list, id) => { for (const p of list) if (p.identifier === id) return p; return null; };
+  const halo = el.querySelector('.halo'), rail = el.querySelector('.rail'), knob = rail.firstElementChild;
+  const center = t => { let x = 0, y = 0; for (const p of t) { x += p.clientX; y += p.clientY; } return [x / t.length, y / t.length]; };
+  // Halo doux qui suit le contact (une ecriture par image).
+  const paint = () => { hraf = 0; halo.style.transform = `translate3d(${hx - rect.left}px,${hy - rect.top}px,0)`; };
+  const follow = (x, y) => { hx = x; hy = y; if (!hraf) hraf = requestAnimationFrame(paint); };
+  const tapMark = (x, y, right) => {
+    const d = document.createElement('div'); d.className = 'tap' + (right ? ' r' : '');
+    d.style.left = (x - rect.left) + 'px'; d.style.top = (y - rect.top) + 'px'; el.appendChild(d); setTimeout(() => d.remove(), 520);
+  };
+  el.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const now = performance.now();
+    if (!start) { start = now; travel = 0; maxT = 0; usedClicker = false; armed = e.touches.length === 1 && now - lastTap < 300; rect = el.getBoundingClientRect(); ptrId = e.touches[0].identifier; }
+    // Deuxieme doigt alors que le premier bouge deja (ou est pose depuis un moment) : c'est le doigt qui clique.
+    if (clickerId === null && !dragging && e.touches.length === 2 && byId(e.touches, ptrId) && (travel >= 8 || now - start > 220)) {
+      const c = [...e.changedTouches].find(p => p.identifier !== ptrId);
+      if (c) {
+        clickerId = c.identifier; usedClicker = true;
+        tapMark(c.clientX, c.clientY, false); tick(); act('button', {button:'left', down:true});
+        const p = byId(e.touches, ptrId); lx = p.clientX; ly = p.clientY; lt = now;
+        return;
+      }
+    }
+    if (clickerId !== null) return;
+    maxT = Math.max(maxT, e.touches.length); [lx, ly] = center(e.touches); lt = now;
+    follow(lx, ly); halo.classList.add('on');
+  }, {passive:false});
+  el.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const ptr = clickerId !== null ? byId(e.touches, ptrId) : null;
+    if (clickerId !== null && !ptr) return;
+    const [x, y] = ptr ? [ptr.clientX, ptr.clientY] : center(e.touches), now = performance.now();
+    const dx = x - lx, dy = y - ly, dt = Math.max(now - lt, 1);
+    lx = x; ly = y; lt = now; travel += Math.abs(dx) + Math.abs(dy);
+    follow(x, y);
+    if (!ptr && e.touches.length >= 2) {
+      scroll(dy * 2.4);
+      railY = Math.max(-43, Math.min(43, railY + dy * .6)); rail.classList.add('on'); knob.style.transform = `translateY(${railY}px)`;
+      return;
+    }
+    if (travel < 3) return;
+    if (armed && !dragging && clickerId === null) { dragging = true; el.classList.add('drag'); tick(); act('button', {button:'left', down:true}); }
+    // Acceleration facon trackpad : lent = precis, rapide = va loin.
+    const v = Math.hypot(dx, dy) / dt;                // px / ms
+    const gain = store.get('sens', 1.5) * (0.9 + 1.7 * Math.min(v, 2.5) ** 1.3);
+    move(dx * gain, dy * gain);
+    onUse && onUse();
+  }, {passive:false});
+  const end = e => {
+    e.preventDefault();
+    if (clickerId !== null && !byId(e.touches, clickerId)) { act('button', {button:'left', down:false}); clickerId = null; }
+    if (e.touches.length) {
+      const p = byId(e.touches, ptrId) || e.touches[0]; ptrId = p.identifier;
+      if (usedClicker) { lx = p.clientX; ly = p.clientY; } else [lx, ly] = center(e.touches);
+      return;
+    }
+    if (clickerId !== null) { act('button', {button:'left', down:false}); clickerId = null; }
+    const now = performance.now();
+    halo.classList.remove('on');
+    if (rail.classList.contains('on')) { rail.classList.remove('on'); railY = 0; knob.style.transform = ''; }
+    if (dragging) { act('button', {button:'left', down:false}); dragging = false; el.classList.remove('drag'); lastTap = 0; }
+    else if (!usedClicker && travel < 8 && now - start < 260) {
+      const t = e.changedTouches[0]; tapMark(t.clientX, t.clientY, maxT >= 2); tick();
+      act('click', {button: maxT >= 2 ? 'right' : 'left'});
+      lastTap = maxT >= 2 ? 0 : now;
+    } else lastTap = 0;
+    start = 0;
+  };
+  el.addEventListener('touchend', end, {passive:false});
+  el.addEventListener('touchcancel', end, {passive:false});
+}
+const hideHint = () => $('#hint').classList.add('gone');
+trackpad($('#pad'), hideHint);
+if (store.get('hintSeen', false)) hideHint();
+setTimeout(() => store.set('hintSeen', true), 5000);
+
+// ---------- Clavier : le clavier de l'iPhone se comporte comme un clavier physique branche au PC
+const typer = $('#typer'), echo = $('#echo'), ph = $('#ph');
+const SENT = '\u200B';  // sentinelle : le champ n'est jamais vide, Retour arriere fonctionne toujours
+const seg = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('fr', {granularity:'grapheme'}) : null;
+const chars = s => seg ? Array.from(seg.segment(s), x => x.segment) : Array.from(s);
+let prevVal = SENT, composing = false, lastType = '', echoText = '', echoTimer = 0;
+const PH_OFF = 'Toucher pour écrire', PH_ON = 'Écrivez : chaque touche part au PC';
+
+function resetField(keep){
+  typer.value = SENT + (keep || ''); prevVal = typer.value;
+  try { typer.setSelectionRange(typer.value.length, typer.value.length); } catch(e){}
+}
+function paintEcho(){
+  echo.textContent = echoText; ph.style.display = echoText ? 'none' : '';
+  const box = echo.parentNode; box.scrollLeft = box.scrollWidth;  // toujours voir la fin de la saisie
+  clearTimeout(echoTimer); echoTimer = setTimeout(() => { echoText = ''; paintEcho(); }, 6000);
+}
+// Compare l'ancien et le nouveau contenu du champ : couvre frappe, autocorrection, QuickType, dictee, collage.
+function sync(){
+  if (composing) return;
+  const v = typer.value; if (v === prevVal) return;
+  const a = chars(prevVal), b = chars(v);
+  let p = 0; while (p < a.length && p < b.length && a[p] === b[p]) p++;
+  let s = 0; while (s < a.length - p && s < b.length - p && a[a.length - 1 - s] === b[b.length - 1 - s]) s++;
+  const del = a.length - p - s, ins = b.slice(p, b.length - s).join('').split(SENT).join('');
+  for (let i = 0; i < s; i++) act('key', {keys:['left']});
+  if (del) {
+    if (lastType === 'deleteWordBackward' && !ins && del === 1 && a[p] === SENT) act('key', {keys:['ctrl','backspace']});
+    else for (let i = 0; i < del; i++) act('key', {keys:['backspace']});
+  }
+  if (ins) act('text', {text: ins});
+  for (let i = 0; i < s; i++) act('key', {keys:['right']});
+  // Apercu : fin de ce qui vient d'etre envoye.
+  if (s) echoText = v.split(SENT).join('');
+  else { echoText = chars(echoText).slice(0, Math.max(0, chars(echoText).length - del)).join('') + ins; }
+  if (echoText.includes('\n')) echoText = echoText.slice(echoText.lastIndexOf('\n') + 1);
+  echoText = echoText.slice(-80); paintEcho();
+  prevVal = v;
+  // Champ court : on repart en gardant le mot en cours, pour que l'autocorrection reste juste.
+  const atEnd = typer.selectionStart === v.length;
+  if (!v.startsWith(SENT) || (atEnd && (v.includes('\n') || v.length > 40))) {
+    let body = v.split(SENT).join('');
+    if (body.includes('\n')) body = body.slice(body.lastIndexOf('\n') + 1);
+    if (body.length > 40) body = (body.match(/\S*$/) || [''])[0].slice(-24);
+    resetField(body);
+  }
+}
+resetField();
+typer.addEventListener('beforeinput', e => { lastType = e.inputType; });
+typer.addEventListener('input', e => { if (e.isComposing) return; if (e.inputType) lastType = e.inputType; sync(); });
+typer.addEventListener('compositionstart', () => { composing = true; });
+typer.addEventListener('compositionend', () => { composing = false; sync(); });
+// Clavier materiel (iPad) : touches speciales et raccourcis.
+const HW = {Escape:'esc', Tab:'tab', ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down',
+            Home:'home', End:'end', PageUp:'pageup', PageDown:'pagedown', Delete:'delete'};
+typer.addEventListener('keydown', e => {
+  if (e.isComposing || e.keyCode === 229) return;
+  if ((e.ctrlKey || e.metaKey) && /^[a-z0-9]$/i.test(e.key)) { e.preventDefault(); act('key', {keys:['ctrl', e.key.toLowerCase()]}); return; }
+  const k = HW[e.key]; if (k) { e.preventDefault(); act('key', {keys: e.shiftKey ? ['shift', k] : [k]}); }
+});
+typer.addEventListener('focus', () => { document.body.classList.add('kb'); ph.textContent = PH_ON; fit(); });
+typer.addEventListener('blur', () => { document.body.classList.remove('kb'); ph.textContent = PH_OFF; resetField(); echoText = ''; paintEcho(); fit(); });
+
+// La vue suit la partie visible au-dessus du clavier iOS.
+const vv = window.visualViewport;
+function fit(){
+  if (!vv) return;
+  const st = document.body.style;
+  st.top = vv.offsetTop + 'px'; st.height = vv.height + 'px'; st.bottom = 'auto';
+  document.body.classList.toggle('short', document.body.classList.contains('kb') && vv.height < 340);
+}
+if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+fit();
+// Clavier ouvert : un toucher hors du champ ne doit jamais le refermer par erreur.
+document.addEventListener('touchstart', e => {
+  if (document.body.classList.contains('kb') && !e.target.closest('#field')) e.preventDefault();
+}, {passive:false});
+
+// Touches de la barre : touchstart/mousedown annules, le champ garde le focus.
+function pressable(el, fire, repeat){
+  let t1, t2;
+  const down = e => { e.preventDefault(); el.classList.add('press'); tick(); fire();
+    if (repeat) t1 = setTimeout(() => t2 = setInterval(fire, 70), 400); };
+  const up = () => { clearTimeout(t1); clearInterval(t2); el.classList.remove('press'); };
+  el.addEventListener('touchstart', down, {passive:false}); el.addEventListener('mousedown', down);
+  ['touchend','touchcancel','mouseup','mouseleave'].forEach(t => el.addEventListener(t, up));
+  el.addEventListener('click', e => e.preventDefault());
+}
+$$('[data-key]').forEach(el => { const keys = el.dataset.key.split('+'); pressable(el, () => act('key', {keys}), el.hasAttribute('data-repeat')); });
+pressable($('#kbHide'), () => typer.blur(), false);
+
+// ---------- Ecran de code
+let entry = '', busy = false;
+[1,2,3,4,5,6,7,8,9,'',0,'del'].forEach(n => {
+  const b = document.createElement('button');
+  if (n === '') { b.className = 'num blank'; b.disabled = true; b.setAttribute('aria-hidden', 'true'); }
+  else if (n === 'del') { b.className = 'num ghost'; b.innerHTML = icon('i-back'); b.setAttribute('aria-label', 'Effacer'); }
+  else { b.className = 'num'; b.textContent = n; }
+  if (n !== '') {
+    const down = e => { e.preventDefault(); if (busy) return; b.classList.add('press'); tick();
+      if (n === 'del') { entry = entry.slice(0, -1); paintDots(); } else digit(String(n)); };
+    const up = () => b.classList.remove('press');
+    b.addEventListener('pointerdown', down);
+    ['pointerup','pointercancel','pointerleave'].forEach(t => b.addEventListener(t, up));
+  }
+  $('#numpad').appendChild(b);
+});
+addEventListener('keydown', e => {
+  if ($('#lock').classList.contains('hidden')) return;
+  if (/^\d$/.test(e.key)) digit(e.key); else if (e.key === 'Backspace') { entry = entry.slice(0, -1); paintDots(); }
+});
+function paintDots(){ $$('#dots i').forEach((d, i) => d.classList.toggle('f', i < entry.length)); }
+function lockMsg(t, err){ const p = $('#lockMsg'); p.textContent = t; p.classList.toggle('err', !!err); }
+async function digit(d){
+  if (busy || entry.length >= 6) return;
+  entry += d; paintDots();
+  if (entry.length < 6) return;
+  const tryPin = entry; busy = true;
+  // Le code est essaye sur tous les PC en meme temps : celui qui l'accepte devient le PC pilote.
+  // On n'attend pas un PC eteint : le premier qui accepte gagne, les autres abandonnent apres 4 s.
+  const tries = [];
+  const targets = pcs.map((p, i) => i).filter(i => !pcs[i].none && (pcs[i].key || !live || live.has(i)));
+  const hit = await new Promise(done => {
+    let left = targets.length;
+    if (!left) return done(null);
+    targets.forEach(i => { const p = pcs[i];
+      (p.key ? relayConfirm(p, tryPin) : post(p.url + '/api/pair/confirm', {code: tryPin})
+        .then(r => r.ok ? r.json().then(j => ({status: 200, token: j.token})) : {status: r.status}, () => ({status: 0})))
+        .then(res => { tries.push({i, status: res.status}); if (res.token) done({i, token: res.token}); else if (!--left) done(null); });
+    });
+  });
+  if (hit) {
+    cur = hit.i; store.set('cur', cur); renderPc(); savePin(hit.token); cancelPairing(hit.i); connect();
+    setTimeout(() => { hideLock(); busy = false; }, 160); return;
+  }
+  // Internet en panne mais meme Wi-Fi que le PC : on propose le chemin direct (adresse venue du QR code).
+  const lanPc = pcs.find(p => p.key && p.lan);
+  if (lanPc && tries.length && tries.every(t => t.status === 0)
+      && confirm('Internet ne répond pas.\nSi ce téléphone est sur le même Wi-Fi que ' + lanPc.name + ', touche OK pour passer en direct.')) {
+    goDirect(lanPc); return;
+  }
+  lockMsg(tries.some(t => t.status === 429) ? 'Trop de codes faux par internet. Sur l’ordinateur, clique « Débloquer » dans la fenêtre Vanta (ou attends 15 min).'
+        : tries.every(t => t.status === 0) ? 'Aucun ordinateur joignable' : 'Code incorrect', true);
+  $('#dots').classList.add('shake', 'err'); navigator.vibrate && navigator.vibrate([30, 40, 30]);
+  setTimeout(() => { $('#dots').classList.remove('shake', 'err'); entry = ''; paintDots(); busy = false; }, 480);
+}
+function showLock(msg, err){
+  entry = ''; busy = false; paintDots(); if (!err) startPairing();
+  $('#lockDirect').hidden = !lanOf();
+  if (pc().none) { msg = 'Scanne le QR code affiché par Vanta sur ton ordinateur : touche « Scanner le QR code » ci-dessous.'; err = false; }
+  lockMsg(msg || 'Tape le code affiché en haut à gauche de l’écran de ton ordinateur.', err); typer.blur(); $('#lock').classList.remove('hidden');
+}
+function hideLock(){
+  $('#lock').classList.add('hidden');
+  // Allumage : la plaque s'eclaire depuis le centre, une seule fois par deverrouillage.
+  document.body.classList.remove('boot'); void document.body.offsetWidth; document.body.classList.add('boot');
+  setTimeout(() => document.body.classList.remove('boot'), 1000);
+}
+
+
+// ---------- Prise en main
+// Dans le navigateur : on explique, puis on installe l'icone en DERNIER (c'est la fin du parcours).
+// A la premiere ouverture depuis l'icone : on reprend la ou on s'etait arrete, avant de demander le code.
+const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const shareIco = '<svg class="share" viewBox="0 0 16 20" fill="none" stroke="#0A84FF" stroke-width="1.6"><path d="M8 1v12M3.5 5.5 8 1l4.5 4.5"/><path d="M5 8H1.5v11h13V8H11"/></svg>';
+const artDuo = '<svg viewBox="0 0 260 200"><rect x="10" y="30" width="150" height="100" fill="none" stroke="#2A2A2E"/><rect x="66" y="130" width="38" height="22" fill="none" stroke="#2A2A2E"/><path d="M50 152h70" stroke="#2A2A2E"/><rect x="190" y="50" width="60" height="118" fill="none" stroke="#F2F2F0"/><rect x="198" y="60" width="44" height="80" fill="none" stroke="#2A2A2E"/><circle cx="222" cy="98" r="4" fill="#0A84FF"/><circle cx="85" cy="80" r="4" fill="#0A84FF"/><path d="M172 98h12" stroke="#0A84FF" stroke-dasharray="2 4"/></svg>';
+const artCode = '<svg viewBox="0 0 260 200"><rect x="10" y="20" width="240" height="150" fill="none" stroke="#2A2A2E"/><rect x="18" y="28" width="96" height="40" fill="#0B0B0D" stroke="#0A84FF"/><text x="26" y="41" fill="#8A8A8E" font-size="7" letter-spacing="1.5" font-family="Futura, Century Gothic, sans-serif">CODE VANTA</text><text x="26" y="61" fill="#F2F2F0" font-size="17" font-family="DIN Alternate, Bahnschrift, sans-serif">482 917</text></svg>';
+const artDone = '<svg viewBox="0 0 260 200"><circle cx="130" cy="100" r="62" fill="none" stroke="#2A2A2E"/><circle cx="130" cy="100" r="40" fill="none" stroke="#2A2A2E"/><path d="M130 38v16M130 146v16M68 100h16M176 100h16" stroke="#2A2A2E"/><circle cx="130" cy="100" r="7" fill="#0A84FF"/></svg>';
+const installSteps = isIOS
+  ? '<li><span>Touche ' + shareIco + ' <b>Partager</b>, en bas de Safari (ou <b>•••</b> puis <b>Partager</b>).</span></li>'
+  + '<li><span>Choisis <b>Sur l\'écran d\'accueil</b> (fais défiler la liste si besoin).</span></li>'
+  + '<li><span>Touche <b>Ajouter</b>.</span></li>'
+  + '<li class="last"><span><b>Ferme Safari et ouvre l\'icône Vanta</b> sur ton écran d\'accueil. La suite se passe là-bas.</span></li>'
+  :'<li><span>Touche <b>⋮</b>, en haut à droite de Chrome.</span></li>'
+  + '<li><span>Choisis <b>Ajouter à l\'écran d\'accueil</b> ou <b>Installer l\'application</b>.</span></li>'
+  + '<li class="last"><span><b>Ferme Chrome et ouvre l\'icône Vanta</b> sur ton écran d\'accueil. La suite se passe là-bas.</span></li>';
+const FLOWS = {
+  web: [
+    {art: artDuo, h: 'Ton téléphone devient ta souris.',
+     p: 'Vanta transforme ton téléphone en pavé tactile et en clavier pour ton ordinateur. Il ne reste qu\'à l\'installer sur ton téléphone : trente secondes, rien à télécharger.'},
+    {art: artCode, h: 'Le principe : un code, et c\'est tout.',
+     p: 'Vanta tourne déjà sur ton ordinateur, même fenêtre fermée. Chaque fois que tu ouvres l\'appli, un code à six chiffres apparaît <b>en haut à gauche de l\'écran de l\'ordinateur</b>. Tu le tapes, tu pilotes.'},
+    {h: 'Ajoute Vanta à ton écran d\'accueil.',
+     p: 'Vanta y devient une icône, comme une vraie appli. C\'est depuis cette icône que tu l\'ouvriras à chaque fois.',
+     list: installSteps, final: true},
+  ],
+  app: [
+    {art: artDone, h: 'Vanta est installé.',
+     p: 'À l\'écran suivant, un code à six chiffres va s\'afficher <b>en haut à gauche de l\'écran de ton ordinateur</b>. Tape-le. Ce sera pareil à chaque fois : ouvre Vanta, tape le code, pilote.',
+     cta: 'Taper le code'},
+  ],
+};
+const flow = standalone ? 'app' : 'web';
+// Sur le site public, l'icone d'ecran d'accueil est facultative : on saute cette etape.
+const S = HOSTED && flow === 'web' ? FLOWS.web.slice(0, 2) : FLOWS[flow];
+$('#introTag').textContent = standalone ? 'Installé' : 'Bienvenue';
+$('#prog').innerHTML = S.length > 1 ? S.map(() => '<i></i>').join('') : '';
+$('#prog').style.gridTemplateColumns = 'repeat(' + S.length + ',1fr)';
+$('#slides').innerHTML = S.map((s, i) => '<section class="slide">'
+  + (s.art ? '<div class="art">' + s.art + '</div>' : '<div class="art"></div>')
+  + (S.length > 1 ? '<div class="idx">0' + (i + 1) + ' / 0' + S.length + '</div>' : '')
+  + '<h2>' + s.h + '</h2>'
+  + (s.p ? '<p>' + s.p + '</p>' : '')
+  + (s.list ? '<ol class="steps-i">' + s.list + '</ol>' : '')
+  + '</section>').join('');
+let slide = 0;
+function paintIntro(){
+  $$('#slides .slide').forEach((s, i) => { s.classList.toggle('on', i === slide); s.classList.toggle('past', i < slide); });
+  $$('#prog i').forEach((b, i) => b.classList.toggle('on', i <= slide));
+  const cur = S[slide];
+  // Derniere etape dans le navigateur : pas de bouton « Commencer », l'action se fait dans Safari.
+  $('#introNext').hidden = !!cur.final;
+  $('#introNext').textContent = cur.cta || (slide === S.length - 1 ? 'Commencer' : 'Suivant');
+  $('#introSkip').textContent = cur.final ? 'Continuer sans installer' : 'Passer';
+  $('#introSkip').style.visibility = (flow === 'app') ? 'hidden' : 'visible';
+}
+const doneKey = flow === 'app' ? 'appWelcomed' : 'introDone';
+function closeIntro(){ store.set(doneKey, true); $('#intro').classList.add('hidden'); if (!pin) showLock(); }
+$('#introNext').onclick = () => { tick(); if (slide < S.length - 1) { slide++; paintIntro(); } else closeIntro(); };
+// « Passer » saute les explications, jamais l'etape de l'ecran d'accueil.
+$('#introSkip').onclick = () => {
+  if (flow === 'web' && !S[slide].final) { slide = S.length - 1; paintIntro(); return; }
+  if (flow === 'web') { try { sessionStorage.setItem('skipInstall', '1'); } catch (e) {} }
+  closeIntro();
+};
+let sx = 0;
+$('#slides').addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
+$('#slides').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - sx;
+  if (dx < -50 && slide < S.length - 1) { slide++; paintIntro(); } else if (dx > 50 && slide > 0) { slide--; paintIntro(); }
+}, {passive:true});
+// Dans le navigateur, la prise en main revient tant que l'icone n'est pas installee (sauf si on a choisi de continuer).
+// Explications deja vues : on revient directement a l'etape de l'ecran d'accueil.
+// Arrivee par « Mode direct » : chaque adresse a sa propre memoire, celle-ci n'a jamais vu la prise en main.
+// On la marque comme vue et on va droit au code.
+const dq = new URLSearchParams(location.hash.slice(1)), directTicket = (!HOSTED && dq.has('direct') && dq.get('t')) || '';
+if (dq.has('direct')) {
+  store.set(doneKey, true); try { sessionStorage.setItem('skipInstall', '1'); } catch (e) {}
+  history.replaceState(null, '', location.pathname + location.search);
+}
+let skipInstall = false; try { skipInstall = sessionStorage.getItem('skipInstall') === '1'; } catch (e) {}
+if (!store.get(doneKey, false)) { paintIntro(); $('#intro').classList.remove('hidden'); }
+else if (flow === 'web' && !skipInstall && !HOSTED) {
+  // Seule l'etape de l'icone revient : pas de barre ni de « 03 / 03 », qui feraient croire a un parcours.
+  slide = S.length - 1; paintIntro();
+  $('#prog').style.visibility = 'hidden'; $$('#slides .idx').forEach(e => e.remove());
+  $('#intro').classList.remove('hidden');
+}
+
+renderPc();
+if (directTicket) {
+  // Arrivee par « Mode direct » avec un ticket : on pilote CE PC tout de suite, sans code.
+  if (!pcs.some(p => clean(p.url) === clean(here))) addDevice('', here);
+  cur = Math.max(0, pcs.findIndex(p => clean(p.url) === clean(here))); store.set('cur', cur); renderPc();
+  post(here + '/api/pair/ticket', {ticket: directTicket}).then(r => r.ok ? r.json() : null).catch(() => null)
+    .then(j => { if (j && j.token) { savePin(j.token); connect(); } else showLock('Tape le code affiché en haut à gauche de l’écran de ton ordinateur.'); });
+}
+// Le code n'est demande a l'ordinateur qu'une fois la prise en main terminee, pour qu'il n'expire pas pendant la lecture.
+else if (pin) connect(); else if ($('#intro').classList.contains('hidden')) showLock();
+</script>
+</body>
+</html>
