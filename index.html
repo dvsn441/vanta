@@ -51,10 +51,11 @@ svg{display:block}
 /* ------------------------------------------------------------- bandeau d'etat */
 .status{position:absolute;top:calc(env(safe-area-inset-top) + 14px);left:var(--gut);right:var(--gut);z-index:4;
   display:flex;align-items:center;gap:10px;padding:10px 12px;background:#000;border:1px solid var(--rule2);
-  font-family:var(--f-disp);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);white-space:nowrap;overflow:hidden;
+  font-family:var(--f-disp);font-size:10.5px;line-height:1.5;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);
   opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .15s var(--out),transform .15s var(--out)}
 .status.on{opacity:1;transform:none}
 .status .ico{width:14px;height:14px;color:var(--ink2)}
+.status span{min-width:0;overflow-wrap:anywhere}
 .status.bad{border-color:var(--alert)}
 .status.bad .ico{color:var(--alert)}
 .spin{animation:spin 1.2s linear infinite}
@@ -110,6 +111,17 @@ svg{display:block}
   transform:translate(-50%,-4px);opacity:0;transition:opacity .12s linear,transform .12s var(--out);pointer-events:none}
 .badge .ico{width:13px;height:13px}
 .pad.drag .badge{opacity:1;transform:translate(-50%,0)}
+
+/* message en grand sur le pave : ce qui se passe et pourquoi c'est normal (connexion, internet irregulier) */
+.say{position:absolute;left:28px;right:28px;top:30px;padding:2px 0 2px 16px;border-left:1px solid var(--blue);pointer-events:none;
+  opacity:0;transform:translateY(-4px);transition:opacity .25s var(--out),transform .25s var(--out)}
+.say.on{opacity:1;transform:none}
+.say.warn{border-color:#FF9F0A}
+.say b{display:block;font:500 19px/1.25 var(--f-disp);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+.say.warn b{color:#FF9F0A}
+.say span{display:block;margin-top:10px;font:16px/1.45 var(--f-text);color:var(--ink2)}
+.pad.touch .say.on{opacity:.28}
+.pad.saying .hint{opacity:0}
 
 /* mode d'emploi : une legende technique, pas des bulles */
 .hint{position:absolute;left:28px;right:28px;bottom:30px;display:flex;flex-direction:column;gap:9px;pointer-events:none;transition:opacity .3s linear}
@@ -342,6 +354,7 @@ svg{display:block}
       <div class="halo"></div>
       <div class="rail"><i></i></div>
       <div class="badge"><svg class="ico"><use href="#i-drag"/></svg>Glisser-déposer</div>
+      <div class="say" id="say" role="status" aria-live="polite"><b id="sayT"></b><span id="sayS"></span></div>
       <div class="hint" id="hint">
         <p><b>01</b>Toucher <span>— clic</span></p>
         <p><b>02</b>Deux doigts <span>— clic droit</span></p>
@@ -432,6 +445,7 @@ svg{display:block}
 </div>
 
 <script>
+const VERSION = '1.10';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const store = {
   get(k, d){ try{ const v = localStorage.getItem('jr.' + k); return v === null ? d : JSON.parse(v) }catch(e){ return d } },
@@ -825,7 +839,7 @@ function relaySocket(p){
     if (s.readyState === 3) return;
     if (!ok) return shut();
     off = r.listen(m => { if (m.cum) r.cum = true; if (m.t === 'down') shut();
-      else if ('auth' in m || CTRL.includes(m.t) || m.t === 'pong' || m.t === 'mt') s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth, busy: m.busy, t: m.t, i: m.i, x: m.x, y: m.y})}); });
+      else if ('auth' in m || CTRL.includes(m.t) || m.t === 'pong' || m.t === 'mt' || m.t === 'q') s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth, busy: m.busy, t: m.t, i: m.i, x: m.x, y: m.y, n: m.n, l: m.l, d: m.d})}); });
     s.readyState = 1; s.onopen && s.onopen();
   });
   return s;
@@ -860,18 +874,38 @@ function setState(s){
   $('#led').className = 'led' + (s === 'ok' ? ' ok' : s === 'wait' ? ' wait' : s === 'bad' || s === 'net' ? ' bad' : '');
   const st = $('#status'), txt = $('#statusTxt'), ico = $('#statusIco');
   clearTimeout(statusTimer);
-  if (s === 'ok' || s === 'idle') { st.classList.remove('on'); return; }
-  const msg = s === 'net' ? ['i-offline', 'Pas de réseau sur l’iPhone', true]
-            : s === 'settle' ? ['i-sync', 'Connexion en cours… la souris peut hésiter un instant', false]
-            : s === 'good' ? ['i-ok', 'Connecté · tout fonctionne', false]
-            : s === 'slow' ? ['i-sync', 'Internet lent · la souris peut saccader', true]
-            : s === 'bad' ? ['i-sync', pc().name + ' hors ligne · nouvel essai…', true]
-            : ['i-sync', 'Connexion à ' + pc().name + '…', false];
+  renderSay();
+  // Le message en grand sur le pave dit deja tout : pas de bandeau en double par-dessus.
+  if (s === 'ok' || s === 'idle' || $('#say').classList.contains('on')) { st.classList.remove('on'); return; }
+  // Bandeau : quelques mots qui tiennent sur la largeur d'un telephone. L'explication est en grand sur le pave.
+  const msg = s === 'net' ? ['i-offline', 'Pas de réseau', true]
+            : s === 'settle' ? ['i-sync', 'Connexion en cours…', false]
+            : s === 'good' ? ['i-ok', 'Connecté', false]
+            : s === 'slow' ? ['i-sync', 'Internet lent', true]
+            : s === 'bad' ? ['i-sync', 'Hors ligne · nouvel essai…', true]
+            : ['i-sync', 'Connexion…', false];
   ico.innerHTML = `<use href="#${msg[0]}"/>`; ico.classList.toggle('spin', msg[0] === 'i-sync');
   txt.textContent = msg[1]; st.classList.toggle('bad', msg[2]);
   // Une reconnexion rapide reste silencieuse : on n'affiche qu'apres un court delai.
   statusTimer = setTimeout(() => st.classList.add('on'), s === 'wait' ? 700 : 0);
   if (s === 'good') statusTimer = setTimeout(() => { st.classList.add('on'); setTimeout(() => { if (state === 'good') setState('ok'); }, 1800); }, 0);
+}
+// ---------- Message en grand sur le pave : ce qui se passe, et que c'est normal.
+function renderSay(){
+  const el = $('#say'); if (!el) return;
+  let t = '', s = '', warn = false, direct = null;
+  try { direct = lanOf(); } catch(e){}
+  if (state === 'settle') { t = 'Connexion en cours'; s = 'La souris peut hésiter quelques secondes : Vanta mesure la liaison et s’ajuste.'; }
+  else if (state === 'bad') { t = pc().name + ' injoignable'; s = 'Nouvel essai automatique. Un ordinateur qui vient de démarrer met environ une minute à lancer Vanta.'; warn = true; }
+  else if (state === 'net') { t = 'Pas de réseau'; s = 'Le téléphone n’a ni Wi-Fi ni 4G. Vanta se reconnecte dès qu’il revient.'; warn = true; }
+  else if (ready && (state === 'slow' || qual.k === 'c')) {
+    t = pc().key ? 'Internet irrégulier' : 'Wi-Fi irrégulier';
+    s = 'Les saccades viennent ' + (pc().key ? 'd’internet' : 'du Wi-Fi') + ', pas de Vanta : il les mesure et compense en continu.'
+      + (direct ? ' Même Wi-Fi que l’ordinateur ? Appareils › Mode direct, plus fluide.' : '');
+    warn = true;
+  }
+  $('#sayT').textContent = t; $('#sayS').textContent = s;
+  el.classList.toggle('warn', warn); el.classList.toggle('on', !!t); $('#pad').classList.toggle('saying', !!t);
 }
 // ---------- Mesure en direct de la liaison, juste apres la connexion
 // Les premieres secondes par internet sont souvent hesitantes (serveur public qui s'echauffe, cle qui
@@ -883,12 +917,22 @@ function probeStart(){
   setState('settle'); probeTick();
 }
 function probeStop(){ clearTimeout(probe.t); probe.on = false; }
-// ---------- Qualite de la liaison en continu (apres « Connecté ») : un ping par seconde, mot dans la barre du bas.
-// FLUIDE : aller-retour < 200 ms, regulier. CORRECT : < 400 ms. INSTABLE : plus lent, irregulier ou pings perdus :
-// les saccades de la souris viennent d'internet, pas de l'appli.
-let qual = {t: 0, i: 0, sent: {}, rtts: []};
-function qualStart(){ qualStop(); qual = {t: 0, i: 0, sent: {}, rtts: []}; qualTick(); }
-function qualStop(){ clearTimeout(qual.t); const q = $('#qual'); q.textContent = ''; q.className = 'qual'; }
+// ---------- Qualite de la liaison en continu (apres « Connecté »), mot dans la barre du bas.
+// Pendant un geste, le PC renvoie toutes les 0,5 s ce que son curseur a vraiment vecu : paquets arrives apres
+// leur heure de lecture (= le curseur a du s'arreter = saccade) et retard de lecture. C'est ce qui decide :
+// FLUIDE = aucune saccade et moins de 120 ms de retard ; CORRECT = une saccade isolee ou un retard sensible ;
+// SACCADES = plus. Le verdict d'un geste reste affiche 20 s. Hors geste, un ping par seconde donne une estimation.
+let qual = {t: 0, i: 0, sent: {}, rtts: [], k: '', reps: [], mk: '', mat: 0};
+function qualStart(){ qualStop(); qual = {t: 0, i: 0, sent: {}, rtts: [], k: '', reps: [], mk: '', mat: 0}; qualTick(); }
+function qualStop(){ clearTimeout(qual.t); qual.k = ''; const q = $('#qual'); q.textContent = ''; q.className = 'qual'; renderSay(); }
+function qualReport(m){
+  if (!m.n) return;
+  const now = performance.now();
+  qual.reps = qual.reps.filter(r => now - r.at < 3000); qual.reps.push({at: now, n: m.n, l: m.l, d: m.d});
+  const n = qual.reps.reduce((a, r) => a + r.n, 0), l = qual.reps.reduce((a, r) => a + r.l, 0), d = Math.max(...qual.reps.map(r => r.d));
+  qual.mk = (!l && d < 120) ? 'a' : (l <= 1 || l / n < 0.03) ? 'b' : 'c'; qual.mat = now;
+  qualShow();
+}
 function qualTick(){
   if (!ready || !ws || (state !== 'ok' && state !== 'slow')) { qual.t = setTimeout(qualTick, 1000); return; }
   const i = 'q' + (++qual.i); qual.sent[i] = performance.now();
@@ -898,12 +942,20 @@ function qualTick(){
 }
 function qualPong(i){ const t0 = qual.sent[i]; if (!t0) return; delete qual.sent[i]; qual.rtts.push(performance.now() - t0); qualShow(); }
 function qualShow(){
-  const last = qual.rtts.slice(-5); if (last.length < 2) return;
-  const srt = [...last].sort((a, b) => a - b), med = srt[srt.length >> 1], lost = last.filter(r => r >= 9999).length;
-  const jit = srt[srt.length - 1 - lost] - srt[0];
-  const k = (!lost && med < 200 && jit < 60) ? 'a' : (lost <= 1 && med < 400 && jit < 150) ? 'b' : 'c';
+  const last = qual.rtts.slice(-6);
+  let pk = '';
+  if (last.length >= 2) {
+    const srt = [...last].sort((a, b) => a - b), med = srt[srt.length >> 1], lost = last.filter(r => r >= 9999).length;
+    const jit = srt[srt.length - 1 - lost] - srt[0];
+    pk = (!lost && med < 150 && jit < 50) ? 'a' : (lost <= 1 && med < 350 && jit < 120) ? 'b' : 'c';
+  }
+  // Un geste recent (moins de 20 s) fait foi ; les pings ne peuvent que l'aggraver (pings perdus, liaison coupee).
+  const k = qual.mk && performance.now() - qual.mat < 20000 ? (pk === 'c' ? 'c' : qual.mk) : pk;
+  if (!k) return;
+  qual.k = k;
   const q = $('#qual'); q.className = 'qual ' + k;
-  q.textContent = k === 'a' ? 'Fluide' : k === 'b' ? 'Correct' : 'Instable · saccades normales';
+  q.textContent = k === 'a' ? 'Fluide' : k === 'b' ? 'Correct' : 'Saccades';
+  renderSay();
   if (state === 'slow' && k !== 'c') setState('ok');   // « Internet lent » s'efface des que ca va mieux
 }
 function probeTick(){
@@ -947,6 +999,7 @@ function connect(){
     const m = JSON.parse(e.data);
     if (m.t === 'pong') { probePong(m.i); qualPong(m.i); }
     else if (m.t === 'mt') gotTail(m);
+    else if (m.t === 'q') qualReport(m);
     else if (CTRL.includes(m.t)) onCtrl(m);
     else if (m.auth === true) { ready = true; if (m.busy) showHeld('busy'); else hideHeld(); probeStart(); }
     else if (m.auth === false) { savePin(''); showLock('Session expirée, tape le nouveau code'); }
@@ -958,7 +1011,7 @@ function connect(){
     retry = setTimeout(() => { if (ws === sock) connect(); }, 1200);
   };
 }
-let lastTx = 0, TX = 0, TY = 0, tailT = 0, tailN = 0;
+let lastTx = 0, TX = 0, TY = 0, tailT = 0, tailN = 0, mts = 0;
 // Fin de geste : on renvoie le total jusqu'a ce que le PC confirme l'avoir recu ({t:'mt'}), 6 fois au plus.
 function sendTail(){
   if (!ready || !ws || tailN++ >= 6) return;
@@ -966,7 +1019,11 @@ function sendTail(){
   tailT = setTimeout(sendTail, 300);
 }
 // Doigt leve : envoi immediat du dernier total (le PC termine le trajet sur-le-champ).
-function settle(){ if (raf) { cancelAnimationFrame(raf); lastTx = 0; frame(); } if (pc().key && relayOf(pc()).cum) { clearTimeout(tailT); tailN = 0; sendTail(); } }
+function settle(){
+  if (raf) { cancelAnimationFrame(raf); lastTx = 0; frame(); }
+  if (pc().key && relayOf(pc()).cum) { clearTimeout(tailT); tailN = 0; sendTail(); }
+  else if (!pc().key && ready && ws) ws.send('["e"]');   // Wi-Fi direct : fin de geste
+}
 function gotTail(m){ if (m.x === TX && m.y === TY) { clearTimeout(tailT); tailN = 9; } }
 function frame(){
   raf = 0;
@@ -974,22 +1031,24 @@ function frame(){
   // Par Internet, 50 envois par seconde au plus (les serveurs publics n'aiment pas les rafales).
   if (pc().key && performance.now() - lastTx < 20) { schedule(); return; }
   lastTx = performance.now();
-  const ix = Math.trunc(mx), iy = Math.trunc(my), is = Math.trunc(sy);
+  const ix = Math.trunc(mx), iy = Math.trunc(my), is = Math.trunc(sy), t = Math.round(mts);
   if (ix || iy) {
+    // t : heure (horloge du telephone) ou le doigt etait la. Le PC rejoue le geste a ce rythme exact,
+    // quelle que soit l'irregularite d'internet.
     // Par internet (PC recent), on joint le total depuis le debut : un paquet perdu par le relais est rattrape.
     if (pc().key && relayOf(pc()).cum) {
-      TX += ix; TY += iy; ws.send(`["M",${TX},${TY},${ix},${iy}]`);
+      TX += ix; TY += iy; ws.send(`["M",${TX},${TY},${ix},${iy},${t}]`);
       // Le dernier paquet peut se perdre sur le serveur relais : on renvoie le total une fois le geste fini
       // (sans effet s'il etait bien arrive, le PC ne bouge que de la difference).
       clearTimeout(tailT); tailN = 0; tailT = setTimeout(sendTail, 180);
     }
-    else ws.send(`["m",${ix},${iy}]`);
+    else ws.send(`["m",${ix},${iy},${t}]`);
     mx -= ix; my -= iy;
   }
   if (is) { ws.send(`["s",${is}]`); sy -= is; }
 }
 const schedule = () => { if (!raf) raf = requestAnimationFrame(frame); };
-function move(dx, dy){ mx += dx; my += dy; schedule(); }
+function move(dx, dy, ts){ mx += dx; my += dy; mts = ts || performance.now(); schedule(); }
 function scroll(d){ sy += d; schedule(); }
 function act(action, body){
   if (raf) { cancelAnimationFrame(raf); lastTx = 0; frame(); }  // garder l'ordre : mouvements d'abord
@@ -1058,7 +1117,9 @@ $('#lockScan').hidden = !HOSTED; $('#lockScan').onclick = startScan; $('#scanClo
 
 // ---------- Pave tactile
 function trackpad(el, onUse){
-  let start = 0, lx = 0, ly = 0, lt = 0, travel = 0, maxT = 0, lastTap = 0, armed = false, dragging = false;
+  let start = 0, lx = 0, ly = 0, lt = 0, travel = 0, maxT = 0, lastTap = 0, armed = false, dragging = false, vs = -1;
+  // Heure exacte du toucher (pas celle ou le script s'execute, qui varie avec la charge du telephone).
+  const when = e => { const p = performance.now(), t = e.timeStamp; return t > 0 && Math.abs(p - t) < 1000 ? t : p; };
   let rect = null, hx = 0, hy = 0, hraf = 0, railY = 0;
   // Un doigt dirige, un autre doigt pose pendant ce temps = bouton gauche (appui = clic, maintien = glisser).
   let ptrId = null, clickerId = null, usedClicker = false;
@@ -1074,8 +1135,8 @@ function trackpad(el, onUse){
   };
   el.addEventListener('touchstart', e => {
     e.preventDefault();
-    const now = performance.now();
-    if (!start) { start = now; travel = 0; maxT = 0; usedClicker = false; armed = e.touches.length === 1 && now - lastTap < 300; rect = el.getBoundingClientRect(); ptrId = e.touches[0].identifier; }
+    const now = when(e);
+    if (!start) { start = now; travel = 0; maxT = 0; usedClicker = false; vs = -1; el.classList.add('touch'); armed = e.touches.length === 1 && now - lastTap < 300; rect = el.getBoundingClientRect(); ptrId = e.touches[0].identifier; }
     // Deuxieme doigt alors que le premier bouge deja (ou est pose depuis un moment) : c'est le doigt qui clique.
     if (clickerId === null && !dragging && e.touches.length === 2 && byId(e.touches, ptrId) && (travel >= 8 || now - start > 220)) {
       const c = [...e.changedTouches].find(p => p.identifier !== ptrId);
@@ -1094,7 +1155,7 @@ function trackpad(el, onUse){
     e.preventDefault();
     const ptr = clickerId !== null ? byId(e.touches, ptrId) : null;
     if (clickerId !== null && !ptr) return;
-    const [x, y] = ptr ? [ptr.clientX, ptr.clientY] : center(e.touches), now = performance.now();
+    const [x, y] = ptr ? [ptr.clientX, ptr.clientY] : center(e.touches), now = when(e);
     const dx = x - lx, dy = y - ly, dt = Math.max(now - lt, 1);
     lx = x; ly = y; lt = now; travel += Math.abs(dx) + Math.abs(dy);
     follow(x, y);
@@ -1107,9 +1168,11 @@ function trackpad(el, onUse){
     if (armed && !dragging && clickerId === null) { dragging = true; el.classList.add('drag'); tick(); act('button', {button:'left', down:true}); }
     // Acceleration facon trackpad : doigt lent = moins d'un pixel d'ecran par pixel de doigt (cibles
     // minuscules), doigt rapide = grandes traversees.
-    const v = Math.hypot(dx, dy) / dt;                // px / ms
+    // Vitesse lissee sur deux evenements : un evenement tactile un peu en avance ou en retard ne fait plus
+    // varier le gain (et donc la vitesse du curseur) d'un evenement a l'autre.
+    const v0 = Math.hypot(dx, dy) / dt, v = vs < 0 ? v0 : vs * 0.4 + v0 * 0.6; vs = v;   // px / ms
     const gain = store.get('sens', 1.5) * (0.5 + 2.3 * Math.min(v, 2.5) ** 1.3);
-    move(dx * gain, dy * gain);
+    move(dx * gain, dy * gain, now);
     onUse && onUse();
   }, {passive:false});
   const end = e => {
@@ -1122,6 +1185,7 @@ function trackpad(el, onUse){
     }
     if (clickerId !== null) { act('button', {button:'left', down:false}); clickerId = null; }
     const now = performance.now();
+    el.classList.remove('touch');
     settle();   // doigt leve : le curseur finit tout de suite son trajet, sans glisser apres
     halo.classList.remove('on');
     if (rail.classList.contains('on')) { rail.classList.remove('on'); railY = 0; knob.style.transform = ''; }
