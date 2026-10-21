@@ -445,7 +445,7 @@ svg{display:block}
 </div>
 
 <script>
-const VERSION = '1.10';
+const VERSION = '1.11';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const store = {
   get(k, d){ try{ const v = localStorage.getItem('jr.' + k); return v === null ? d : JSON.parse(v) }catch(e){ return d } },
@@ -803,7 +803,7 @@ async function startScan(){
   try { if ('BarcodeDetector' in window) det = new BarcodeDetector({formats: ['qr_code']}); } catch(e){}
   if (!det) {
     try { await loadJsQR(); }
-    catch(e){ stopScan(); lockMsg('Lecteur de QR code introuvable (pas d’internet ?). Scanne plutôt avec l’appareil photo du téléphone.', true); return; }
+    catch(e){ stopScan(); lockMsg('Lecteur indisponible. Scanne avec l’appareil photo.', true); return; }
   }
   try {
     scanStream = await navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}, audio: false});
@@ -825,7 +825,7 @@ async function startScan(){
     };
     tick();
   } catch(e){
-    stopScan(); lockMsg('Caméra indisponible ou refusée. Autorise-la dans Réglages, ou scanne avec l’appareil photo.', true);
+    stopScan(); lockMsg('Caméra refusée. Autorise-la dans Réglages.', true);
   }
 }
 // Imite un WebSocket vers le PC, pour que connect() serve aux deux chemins.
@@ -861,7 +861,7 @@ function onCtrl(m){
   if (m.t === 'kicked') {
     hideHeld(); ready = false; savePin('');
     const old = ws; ws = null; try { old && old.close(); } catch(e){}
-    setState('idle'); showLock('Déconnecté depuis l’ordinateur. Touche « Nouveau code » pour te reconnecter.', true);
+    setState('idle'); showLock('Déconnecté depuis l’ordinateur.', true);
     return;
   }
   if (m.t === 'free') hideHeld(); else showHeld(m.t);
@@ -881,8 +881,8 @@ function setState(s){
   const msg = s === 'net' ? ['i-offline', 'Pas de réseau', true]
             : s === 'settle' ? ['i-sync', 'Connexion en cours…', false]
             : s === 'good' ? ['i-ok', 'Connecté', false]
-            : s === 'slow' ? ['i-sync', 'Internet lent', true]
-            : s === 'bad' ? ['i-sync', 'Hors ligne · nouvel essai…', true]
+            : s === 'slow' ? ['i-sync', 'Réseau lent', true]
+            : s === 'bad' ? ['i-sync', 'Hors ligne', true]
             : ['i-sync', 'Connexion…', false];
   ico.innerHTML = `<use href="#${msg[0]}"/>`; ico.classList.toggle('spin', msg[0] === 'i-sync');
   txt.textContent = msg[1]; st.classList.toggle('bad', msg[2]);
@@ -895,13 +895,12 @@ function renderSay(){
   const el = $('#say'); if (!el) return;
   let t = '', s = '', warn = false, direct = null;
   try { direct = lanOf(); } catch(e){}
-  if (state === 'settle') { t = 'Connexion en cours'; s = 'La souris peut hésiter quelques secondes : Vanta mesure la liaison et s’ajuste.'; }
-  else if (state === 'bad') { t = pc().name + ' injoignable'; s = 'Nouvel essai automatique. Un ordinateur qui vient de démarrer met environ une minute à lancer Vanta.'; warn = true; }
-  else if (state === 'net') { t = 'Pas de réseau'; s = 'Le téléphone n’a ni Wi-Fi ni 4G. Vanta se reconnecte dès qu’il revient.'; warn = true; }
+  if (state === 'settle') { t = 'Calibrage'; s = 'Mesure de la liaison. 2 à 3 secondes.'; }
+  else if (state === 'bad') { t = 'Ordinateur hors ligne'; s = 'Reconnexion automatique. Après un démarrage du PC : environ 1 min.'; warn = true; }
+  else if (state === 'net') { t = 'Pas de réseau'; s = 'Reconnexion automatique.'; warn = true; }
   else if (ready && (state === 'slow' || qual.k === 'c')) {
-    t = pc().key ? 'Internet irrégulier' : 'Wi-Fi irrégulier';
-    s = 'Les saccades viennent ' + (pc().key ? 'd’internet' : 'du Wi-Fi') + ', pas de Vanta : il les mesure et compense en continu.'
-      + (direct ? ' Même Wi-Fi que l’ordinateur ? Appareils › Mode direct, plus fluide.' : '');
+    t = 'Réseau instable';
+    s = 'Compensation active.' + (direct ? ' Même Wi-Fi que le PC : Appareils › Mode direct.' : '');
     warn = true;
   }
   $('#sayT').textContent = t; $('#sayS').textContent = s;
@@ -1003,7 +1002,7 @@ function connect(){
     else if (m.t === 'q') qualReport(m);
     else if (CTRL.includes(m.t)) onCtrl(m);
     else if (m.auth === true) { ready = true; if (m.busy) showHeld('busy'); else hideHeld(); probeStart(); }
-    else if (m.auth === false) { savePin(''); showLock('Session expirée, tape le nouveau code'); }
+    else if (m.auth === false) { savePin(''); showLock('Session expirée. Nouveau code à l’écran.'); }
   };
   sock.onclose = () => {
     if (ws !== sock) return;
@@ -1088,20 +1087,20 @@ function openSheet(){
     if (!url || url === 'https://') return;
     const name = prompt('Nom de cet appareil', '') || '';
     if (!addDevice(name, url)) { alert('Adresse invalide : elle doit commencer par http:// ou https://'); return; }
-    renderPc(); showLock('Tape le code affiché sur le nouvel appareil');
+    renderPc(); showLock('Code affiché sur le nouvel ordinateur.');
   });
   if (pcs.length > 1) row('Retirer ' + pc().name, 'warn', 'i-lock', () => {
     if (!confirm('Retirer ' + pc().name + ' de la liste ?')) return;
     delete pins[pc().name]; pcs.splice(cur, 1); cur = 0; store.set('cur', 0); saveDevices(); keepSess();
     pin = pins[pc().name] || ''; renderPc(); connect(); if (!pin) showLock();
   });
-  if (lanOf()) row('Mode direct (même Wi-Fi, plus rapide)', '', 'i-sync', () => $('#lockDirect').onclick());
+  if (lanOf()) row('Mode direct · même Wi-Fi', '', 'i-sync', () => $('#lockDirect').onclick());
   if (pin) row('Verrouiller', '', 'i-lock', () => { savePin(''); connect(); showLock(); });
   $('#scrim').classList.add('on'); $('#sheet').classList.add('on');
 }
 function closeSheet(){ $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); }
 $('#heldBtn').onclick = () => { if (ready && ws) ws.send(JSON.stringify({t: 'take'})); hideHeld(); };
-$('#pcBtn').onclick = openSheet; $('#devBtn').onclick = openSheet; $('#lockPc').onclick = () => { showLock('Nouveau code affiché sur les écrans'); };
+$('#pcBtn').onclick = openSheet; $('#devBtn').onclick = openSheet; $('#lockPc').onclick = () => { showLock('Nouveau code à l’écran.'); };
 // Mode direct : meme Wi-Fi que le PC, sans relais, latence la plus faible. Un geste, puis le code.
 // #direct : la page du PC saute la prise en main (deja vue sur le site public) et montre tout de suite le clavier du code.
 // Deja appaire par internet : le PC donne, sous la cle de session, un ticket (60 s, usage unique) que la page
@@ -1112,7 +1111,7 @@ const goDirect = async p => {
   location.href = 'http://' + p.lan + '/#direct' + (t ? '&t=' + encodeURIComponent(t) : '');
 };
 const lanOf = () => HOSTED && pc().key && pc().lan ? pc() : null;
-$('#lockDirect').onclick = () => { const p = lanOf(); if (p && confirm('Passer en direct sur ' + p.name + ' ?\nLe téléphone doit être sur le même Wi-Fi que ce PC.' + (pin && ready ? ' Pas besoin de retaper un code.' : ' Un code te sera demandé.'))) goDirect(p); };
+$('#lockDirect').onclick = () => { const p = lanOf(); if (p && confirm('Mode direct sur ' + p.name + ' ?\nMême Wi-Fi que le PC requis.' + (pin && ready ? '' : ' Code demandé.'))) goDirect(p); };
 $('#lockScan').hidden = !HOSTED; $('#lockScan').onclick = startScan; $('#scanClose').onclick = stopScan; $('#scrim').onclick = closeSheet; $('#cancel').onclick = closeSheet;
 
 
@@ -1212,7 +1211,7 @@ const SENT = '\u200B';  // sentinelle : le champ n'est jamais vide, Retour arrie
 const seg = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('fr', {granularity:'grapheme'}) : null;
 const chars = s => seg ? Array.from(seg.segment(s), x => x.segment) : Array.from(s);
 let prevVal = SENT, composing = false, lastType = '', echoText = '', echoTimer = 0;
-const PH_OFF = 'Toucher pour écrire', PH_ON = 'Écrivez : chaque touche part au PC';
+const PH_OFF = 'Toucher pour écrire', PH_ON = 'Chaque touche part au PC';
 
 function resetField(keep){
   typer.value = SENT + (keep || ''); prevVal = typer.value;
@@ -1329,7 +1328,7 @@ async function digit(d){
   const tries = [];
   const targets = pcs.map((p, i) => i).filter(i => !pcs[i].none && (pcs[i].key || !live || live.has(i)));
   if (!targets.length) {
-    lockMsg('Aucun ordinateur enregistré sur ce téléphone. Touche « Scanner le QR code » et vise la fenêtre Vanta de ton ordinateur.', true);
+    lockMsg('Aucun ordinateur. Scanne le QR code de Vanta.', true);
     $('#lockScan').hidden = !HOSTED;
     $('#dots').classList.add('shake', 'err');
     setTimeout(() => { $('#dots').classList.remove('shake', 'err'); entry = ''; paintDots(); busy = false; }, 480);
@@ -1352,16 +1351,16 @@ async function digit(d){
   const lanPc = pcs.find(p => p.key && p.lan);
   // (Plus de fenetre « Internet ne repond pas » : le relais a deja reessaye tout seul sur une connexion neuve.
   //  Le bouton « Meme Wi-Fi que le PC ? Mode direct » reste en bas de l'ecran pour ce cas.)
-  lockMsg(tries.some(t => t.status === 429) ? 'Trop de codes faux par internet. Sur l’ordinateur, clique « Débloquer » dans la fenêtre Vanta (ou attends 15 min).'
-        : tries.every(t => t.status === 0) ? 'Ton ordinateur ne répond pas. Vérifie que Vanta tourne dessus, puis rescanne son QR code : il change quand Vanta est réinstallé.' : 'Code incorrect', true);
+  lockMsg(tries.some(t => t.status === 429) ? 'Trop d’essais. Débloque depuis l’ordinateur ou attends 15 min.'
+        : tries.every(t => t.status === 0) ? 'Ordinateur injoignable. Vanta réinstallé ? Rescanne son QR code.' : 'Code incorrect', true);
   $('#dots').classList.add('shake', 'err'); navigator.vibrate && navigator.vibrate([30, 40, 30]);
   setTimeout(() => { $('#dots').classList.remove('shake', 'err'); entry = ''; paintDots(); busy = false; }, 480);
 }
 function showLock(msg, err){
   entry = ''; busy = false; paintDots(); if (!err) startPairing();
   $('#lockDirect').hidden = !lanOf();
-  if (pc().none) { msg = 'Scanne le QR code affiché par Vanta sur ton ordinateur : touche « Scanner le QR code » ci-dessous.'; err = false; }
-  lockMsg(msg || 'Tape le code affiché en haut à gauche de l’écran de ton ordinateur.', err); typer.blur(); $('#lock').classList.remove('hidden');
+  if (pc().none) { msg = 'Scanne le QR code de Vanta sur ton ordinateur.'; err = false; }
+  lockMsg(msg || 'Code affiché en haut à gauche de l’ordinateur.', err); typer.blur(); $('#lock').classList.remove('hidden');
 }
 function hideLock(){
   $('#lock').classList.add('hidden');
@@ -1384,29 +1383,29 @@ const installSteps = isIOS
   ? '<li><span>Touche ' + shareIco + ' <b>Partager</b>, en bas de Safari (ou <b>•••</b> puis <b>Partager</b>).</span></li>'
   + '<li><span>Choisis <b>Sur l\'écran d\'accueil</b> (fais défiler la liste si besoin).</span></li>'
   + '<li><span>Touche <b>Ajouter</b>.</span></li>'
-  + '<li class="last"><span><b>Ferme Safari et ouvre l\'icône Vanta</b> sur ton écran d\'accueil. La suite se passe là-bas.</span></li>'
+  + '<li class="last"><span><b>Ferme Safari et ouvre l\'icône Vanta.</b></span></li>'
   :'<li><span>Touche <b>⋮</b>, en haut à droite de Chrome.</span></li>'
   + '<li><span>Choisis <b>Ajouter à l\'écran d\'accueil</b> ou <b>Installer l\'application</b>.</span></li>'
-  + '<li class="last"><span><b>Ferme Chrome et ouvre l\'icône Vanta</b> sur ton écran d\'accueil. La suite se passe là-bas.</span></li>';
+  + '<li class="last"><span><b>Ferme Chrome et ouvre l\'icône Vanta.</b></span></li>';
 const FLOWS = {
   web: [
     {art: artDuo, h: 'Ton téléphone devient ta souris.',
-     p: 'Vanta transforme ton téléphone en pavé tactile et en clavier pour ton ordinateur. Il ne reste qu\'à l\'installer sur ton téléphone : trente secondes, rien à télécharger.'},
-    {art: artCode, h: 'Le principe : un code, et c\'est tout.',
-     p: 'Vanta tourne déjà sur ton ordinateur, même fenêtre fermée. Chaque fois que tu ouvres l\'appli, un code à six chiffres apparaît <b>en haut à gauche de l\'écran de l\'ordinateur</b>. Tu le tapes, tu pilotes.'},
+     p: 'Pavé tactile et clavier pour ton ordinateur. Rien à télécharger.'},
+    {art: artCode, h: 'Un code, et c\'est tout.',
+     p: 'À chaque ouverture, un code à six chiffres s\'affiche <b>en haut à gauche de l\'ordinateur</b>. Tu le tapes, tu pilotes.'},
     {h: 'Ajoute Vanta à ton écran d\'accueil.',
-     p: 'Vanta y devient une icône, comme une vraie appli. C\'est depuis cette icône que tu l\'ouvriras à chaque fois.',
+     p: 'Tu ouvriras Vanta depuis cette icône.',
      list: installSteps, final: true},
   ],
   app: [
     {art: artDone, h: 'Vanta est installé.',
-     p: 'À l\'écran suivant, un code à six chiffres va s\'afficher <b>en haut à gauche de l\'écran de ton ordinateur</b>. Tape-le. Ce sera pareil à chaque fois : ouvre Vanta, tape le code, pilote.',
+     p: 'Tape le code affiché <b>en haut à gauche de l\'ordinateur</b>. Ce sera pareil à chaque fois.',
      cta: 'Taper le code'},
   ],
 };
 // Icone ouverte sans la cle du PC (rien a piloter) : on fait scanner le QR code au lieu de promettre un code.
 if (pc().none && HOSTED) FLOWS.app = [{art: artDone, h: 'Vanta est installé.',
-  p: 'Dernière étape : scanne ici le <b>QR code affiché par Vanta sur ton ordinateur</b>. Ensuite, tape le code qui apparaît en haut à gauche de son écran.',
+  p: 'Scanne le <b>QR code de Vanta</b> sur ton ordinateur, puis tape le code affiché en haut à gauche.',
   cta: 'Scanner le QR code', scan: true}];
 const flow = standalone ? 'app' : 'web';
 // Sur le site public aussi, on guide jusqu'a l'icone d'ecran d'accueil (elle rouvre le lien avec la cle).
@@ -1471,7 +1470,7 @@ if (directTicket) {
   if (!pcs.some(p => clean(p.url) === clean(here))) addDevice('', here);
   cur = Math.max(0, pcs.findIndex(p => clean(p.url) === clean(here))); store.set('cur', cur); renderPc();
   post(here + '/api/pair/ticket', {ticket: directTicket}).then(r => r.ok ? r.json() : null).catch(() => null)
-    .then(j => { if (j && j.token) { savePin(j.token); connect(); } else showLock('Tape le code affiché en haut à gauche de l’écran de ton ordinateur.'); });
+    .then(j => { if (j && j.token) { savePin(j.token); connect(); } else showLock('Code affiché en haut à gauche de l’ordinateur.'); });
 }
 // Le code n'est demande a l'ordinateur qu'une fois la prise en main terminee, pour qu'il n'expire pas pendant la lecture.
 else if (pin) connect(); else if ($('#intro').classList.contains('hidden')) showLock();
