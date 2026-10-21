@@ -58,6 +58,13 @@ svg{display:block}
 .status.bad{border-color:var(--alert)}
 .status.bad .ico{color:var(--alert)}
 .spin{animation:spin 1.2s linear infinite}
+/* un autre telephone pilote ce PC : bandeau avec « Prendre la main » */
+.held{position:absolute;top:calc(env(safe-area-inset-top) + 14px);left:var(--gut);right:var(--gut);z-index:5;
+  display:flex;align-items:center;gap:12px;padding:10px 10px 10px 12px;background:#000;border:1px solid var(--blue);
+  font-family:var(--f-disp);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.held span{flex:1;line-height:1.5}
+.held button{flex:none;padding:9px 12px;background:var(--blue);color:#fff;font-family:var(--f-disp);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+.held.hidden{display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ------------------------------------------------------------- vues */
@@ -322,6 +329,7 @@ svg{display:block}
   </defs>
 </svg>
 
+<div class="held hidden" id="held" role="alert"><span id="heldTxt"></span><button id="heldBtn">Prendre la main</button></div>
 <div class="status" id="status" role="status" aria-live="polite"><svg class="ico" id="statusIco"><use href="#i-sync"/></svg><span id="statusTxt"></span></div>
 
 <div class="views">
@@ -812,10 +820,33 @@ function relaySocket(p){
   r.open().then(ok => {
     if (s.readyState === 3) return;
     if (!ok) return shut();
-    off = r.listen(m => { if (m.cum) r.cum = true; if (m.t === 'down') shut(); else if ('auth' in m) s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth})}); });
+    off = r.listen(m => { if (m.cum) r.cum = true; if (m.t === 'down') shut();
+      else if ('auth' in m || CTRL.includes(m.t)) s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth, busy: m.busy, t: m.t})}); });
     s.readyState = 1; s.onopen && s.onopen();
   });
   return s;
+}
+
+// ---------- Un seul telephone aux commandes
+// Le PC n'obeit qu'a un telephone a la fois. Les autres recoivent « busy » (un autre pilote en ce moment)
+// ou « taken » (un autre vient de prendre la main) ; « free » : on a la main ; « kicked » : deconnecte
+// depuis l'ordinateur (raccourci Ctrl+Alt+X ou lien de la fenetre Vanta), il faudra un nouveau code.
+const CTRL = ['busy', 'taken', 'free', 'kicked'];
+function showHeld(kind){
+  $('#heldTxt').textContent = kind === 'taken' ? 'Un autre téléphone a pris la main sur ' + pc().name
+                                               : 'Un autre téléphone pilote ' + pc().name;
+  $('#heldBtn').textContent = kind === 'taken' ? 'Reprendre' : 'Prendre la main';
+  $('#held').classList.remove('hidden');
+}
+function hideHeld(){ $('#held').classList.add('hidden'); }
+function onCtrl(m){
+  if (m.t === 'kicked') {
+    hideHeld(); ready = false; savePin('');
+    const old = ws; ws = null; try { old && old.close(); } catch(e){}
+    setState('idle'); showLock('Déconnecté depuis l’ordinateur. Touche « Nouveau code » pour te reconnecter.', true);
+    return;
+  }
+  if (m.t === 'free') hideHeld(); else showHeld(m.t);
 }
 
 // ---------- Etat de connexion
@@ -839,7 +870,7 @@ function setState(s){
 let ws = null, ready = false, mx = 0, my = 0, sy = 0, raf = 0, retry = 0;
 function connect(){
   if (ws) { const old = ws; ws = null; try { old.close(); } catch(e){} }
-  ready = false; clearTimeout(retry);
+  ready = false; clearTimeout(retry); hideHeld();
   if (!pin) { setState('idle'); return; }
   if (navigator.onLine === false) { setState('net'); return; }
   setState(state === 'bad' ? 'bad' : 'wait');
@@ -849,7 +880,8 @@ function connect(){
   sock.onopen = () => sock.send(JSON.stringify({token: pin}));
   sock.onmessage = e => {
     const m = JSON.parse(e.data);
-    if (m.auth === true) { ready = true; setState('ok'); }
+    if (CTRL.includes(m.t)) onCtrl(m);
+    else if (m.auth === true) { ready = true; setState('ok'); if (m.busy) showHeld('busy'); else hideHeld(); }
     else if (m.auth === false) { savePin(''); showLock('Session expirée, tape le nouveau code'); }
   };
   sock.onclose = () => {
@@ -927,6 +959,7 @@ function openSheet(){
   $('#scrim').classList.add('on'); $('#sheet').classList.add('on');
 }
 function closeSheet(){ $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); }
+$('#heldBtn').onclick = () => { if (ready && ws) ws.send(JSON.stringify({t: 'take'})); hideHeld(); };
 $('#pcBtn').onclick = openSheet; $('#devBtn').onclick = openSheet; $('#lockPc').onclick = () => { showLock('Nouveau code affiché sur les écrans'); };
 // Mode direct : meme Wi-Fi que le PC, sans relais, latence la plus faible. Un geste, puis le code.
 // #direct : la page du PC saute la prise en main (deja vue sur le site public) et montre tout de suite le clavier du code.
