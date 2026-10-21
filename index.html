@@ -604,26 +604,37 @@ class Relay {
     })();
     setInterval(() => this.keepAlive(), 3000);
   }
-  // Resolue a true des que le PC a repondu sur l'un des serveurs (essayes l'un apres l'autre).
+  // Resolue a true des que le PC a repondu sur l'un des serveurs. Les serveurs sont essayes EN MEME TEMPS :
+  // le premier qui fait repondre le PC gagne, les autres sont fermes (connexion en ~1 s au lieu de 5 a 15 s).
   open(){
     if (this.ok) return Promise.resolve(true);
     if (this.opening) return this.opening;
     return this.opening = (async () => {
       await this.ready;
-      for (let k = 0; k < this.B.length; k++) {
-        const i = (this.bi + k) % this.B.length;
-        if (await this.tryBroker(i)) { this.bi = i; store.set('broker', i); return true; }
-      }
-      return false;
+      this.race = new Set();
+      const order = this.B.map((_, k) => (this.bi + k) % this.B.length);
+      const ok = await new Promise(done => {
+        let left = order.length;
+        order.forEach((i, k) => setTimeout(() => this.tryBroker(i).then(r => {
+          if (r) { this.bi = i; store.set('broker', i); done(true); } else if (!--left) done(false);
+        }), k * 150));   // le serveur habituel part en premier, un tout petit peu avant les autres
+      });
+      this.race.forEach(w => { if (w !== this.ws) { try { w.close(); } catch(e){} } }); this.race = null;
+      return ok;
     })().finally(() => { this.opening = null; });
   }
   tryBroker(i){
     return new Promise(done => {
       let ws, buf = new Uint8Array(0), settled = false;
-      const finish = ok => { if (settled) return; settled = true; clearTimeout(timer); if (!ok) { try { ws.close(); } catch(e){} } done(ok); };
+      const finish = ok => {
+        if (settled) return; settled = true; clearTimeout(timer);
+        if (ok && this.ok && this.ws !== ws) ok = false;          // un autre serveur a deja gagne la course
+        if (ok) { this.ws = ws; this.wi = i; } else { try { ws.close(); } catch(e){} }
+        done(ok);
+      };
       const timer = setTimeout(() => finish(false), 5000);
       try { ws = new WebSocket(this.B[i], 'mqtt'); } catch(e){ return finish(false); }
-      ws.binaryType = 'arraybuffer'; this.ws = ws; this.wi = i;
+      ws.binaryType = 'arraybuffer'; if (this.race) this.race.add(ws); else { this.ws = ws; this.wi = i; }
       ws.onopen = () => ws.send(mq.connect('vanta-ph-' + this.me + Math.random().toString(36).slice(2, 6)));
       ws.onmessage = e => {
         buf = cat(buf, new Uint8Array(e.data)); let p;
@@ -642,7 +653,7 @@ class Relay {
       if (p.body[1] !== 0) return finish(false);
       ws.send(mq.subscribe(this.down));
     } else if (p.type === 9) {                // SUBACK : on se presente au PC (echange de cles)
-      this.sendText(JSON.stringify({t: 'dh', pub: this.pub.toString(16)}), true);
+      this.sendText(JSON.stringify({t: 'dh', pub: this.pub.toString(16)}), true, ws);
     } else if (p.type === 3) {                // PUBLISH : un message du PC
       const tl = (p.body[0] << 8) | p.body[1], off = 2 + tl + (((p.flags >> 1) & 3) ? 2 : 0);
       const data = p.body.slice(off);
@@ -652,7 +663,7 @@ class Relay {
         if (r.qr) {
           // Sous la cle du QR, seuls "dh" et "rekey" sont acceptes : un autre porteur du QR ne peut rien injecter d'autre.
           if (m.t === 'rekey') { if (this.ok && this.ws === ws) { try { ws.close(); } catch(e){} } return; }
-          if (m.t !== 'dh' || this.ws !== ws) return;
+          if (m.t !== 'dh' || (this.ok && this.ws !== ws)) return;
           let y, id; try { y = BigInt('0x' + m.pub); id = BigInt('0x' + m.id); } catch(e){ return; }
           if (y <= 1n || y >= DH_P - 1n || id <= 1n || id >= DH_P - 1n) return;
           if (!this.sbox || this.pcPub !== y) {   // nouvelle session (premiere fois, ou PC relance)
@@ -670,7 +681,7 @@ class Relay {
             this.sbox = await Box.make(k); this.pcPub = y;
           }
           this.lastRx = Date.now();
-          if (!this.ok) { this.ok = true; finish(true); }
+          if (!this.ok) { this.ws = ws; this.ok = true; finish(true); }
           return;
         }
         this.lastRx = Date.now();
@@ -688,8 +699,8 @@ class Relay {
   }
   // Envoi chiffre, dans l'ordre. iv = identifiant du telephone (8 octets) + compteur (4 octets) : le PC refuse les rejeux.
   // Tout passe sous la cle de session, sauf l'echange de cles lui-meme (qr = true).
-  sendText(text, qr){
-    const ws = this.ws, box = qr ? this.box : this.sbox; if (!ws || ws.readyState !== 1 || !box) return;
+  sendText(text, qr, via){
+    const ws = via || this.ws, box = qr ? this.box : this.sbox; if (!ws || ws.readyState !== 1 || !box) return;
     const iv = new Uint8Array(12); iv.set(this.sid); new DataView(iv.buffer).setUint32(8, ++this.n);
     this.q = this.q.then(() => box.seal('up', iv, te.encode(text)))
       .then(pkt => { if (ws.readyState === 1) ws.send(mq.publish(this.up, pkt)); }).catch(() => {});
