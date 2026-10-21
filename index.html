@@ -1185,7 +1185,7 @@ const FLOWS = {
   ],
 };
 const flow = standalone ? 'app' : 'web';
-// L'icone d'ecran d'accueil garde le lien complet (avec la cle) : on guide son ajout, aussi sur le site public.
+// Sur le site public aussi, on guide jusqu'a l'icone d'ecran d'accueil (elle rouvre le lien avec la cle).
 const S = FLOWS[flow];
 $('#introTag').textContent = standalone ? 'Installé' : 'Bienvenue';
 $('#prog').innerHTML = S.length > 1 ? S.map(() => '<i></i>').join('') : '';
