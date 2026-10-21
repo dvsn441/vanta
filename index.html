@@ -325,6 +325,7 @@ svg{display:block}
     <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
     <symbol id="i-desk" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2.5"/><path d="M9 20h6M12 16.5V20"/></symbol>
     <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.35-5.65"/><path d="M20 4.5v4h-4"/></symbol>
+    <symbol id="i-ok" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
     <symbol id="i-offline" viewBox="0 0 24 24"><path d="M2.5 9a14 14 0 0 1 6-3.2M21.5 9a14 14 0 0 0-8.2-3.7"/><path d="M5.5 12.5a9.5 9.5 0 0 1 3.3-2M18.5 12.5a9.5 9.5 0 0 0-2.2-1.6"/><path d="M9 16a4.5 4.5 0 0 1 6 0"/><path d="M12 19.5h.01"/><path d="m3.5 3.5 17 17"/></symbol>
   </defs>
 </svg>
@@ -821,7 +822,7 @@ function relaySocket(p){
     if (s.readyState === 3) return;
     if (!ok) return shut();
     off = r.listen(m => { if (m.cum) r.cum = true; if (m.t === 'down') shut();
-      else if ('auth' in m || CTRL.includes(m.t)) s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth, busy: m.busy, t: m.t})}); });
+      else if ('auth' in m || CTRL.includes(m.t) || m.t === 'pong') s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth, busy: m.busy, t: m.t, i: m.i})}); });
     s.readyState = 1; s.onopen && s.onopen();
   });
   return s;
@@ -858,12 +859,50 @@ function setState(s){
   clearTimeout(statusTimer);
   if (s === 'ok' || s === 'idle') { st.classList.remove('on'); return; }
   const msg = s === 'net' ? ['i-offline', 'Pas de réseau sur l’iPhone', true]
+            : s === 'settle' ? ['i-sync', 'Connexion en cours… la souris peut hésiter un instant', false]
+            : s === 'good' ? ['i-ok', 'Connecté · tout fonctionne', false]
+            : s === 'slow' ? ['i-sync', 'Internet lent · la souris peut saccader', true]
             : s === 'bad' ? ['i-sync', pc().name + ' hors ligne · nouvel essai…', true]
             : ['i-sync', 'Connexion à ' + pc().name + '…', false];
   ico.innerHTML = `<use href="#${msg[0]}"/>`; ico.classList.toggle('spin', msg[0] === 'i-sync');
   txt.textContent = msg[1]; st.classList.toggle('bad', msg[2]);
   // Une reconnexion rapide reste silencieuse : on n'affiche qu'apres un court delai.
   statusTimer = setTimeout(() => st.classList.add('on'), s === 'wait' ? 700 : 0);
+  if (s === 'good') statusTimer = setTimeout(() => { st.classList.add('on'); setTimeout(() => { if (state === 'good') setState('ok'); }, 1800); }, 0);
+}
+// ---------- Mesure en direct de la liaison, juste apres la connexion
+// Les premieres secondes par internet sont souvent hesitantes (serveur public qui s'echauffe, cle qui
+// s'installe) : on le dit a l'ecran, on envoie un "ping" toutes les 400 ms et on ne declare « Connecté »
+// qu'avec 6 allers-retours de suite rapides et reguliers. Si ca reste mauvais 12 s, on change de serveur.
+let probe = {on: false, i: 0, sent: {}, rtts: [], t: 0, since: 0, hops: 0};
+function probeStart(){
+  probeStop(); probe = {on: true, i: 0, sent: {}, rtts: [], t: 0, since: performance.now(), hops: probe.hops};
+  setState('settle'); probeTick();
+}
+function probeStop(){ clearTimeout(probe.t); probe.on = false; }
+function probeTick(){
+  if (!probe.on || !ready || !ws) return;
+  const i = ++probe.i; probe.sent[i] = performance.now();
+  try { ws.send(JSON.stringify({t: 'ping', i})); } catch(e){}
+  // ping sans reponse au bout de 1,2 s : compte comme perdu
+  setTimeout(() => { if (probe.sent[i]) { delete probe.sent[i]; probe.rtts.push(9999); probeJudge(); } }, 1200);
+  probe.t = setTimeout(probeTick, 400);
+}
+function probePong(i){
+  const t0 = probe.sent[i]; if (!t0) return; delete probe.sent[i];
+  probe.rtts.push(performance.now() - t0); probeJudge();
+}
+function probeJudge(){
+  if (!probe.on) return;
+  const last = probe.rtts.slice(-6);
+  if (last.length >= 6 && last.every(r => r < 350) && Math.max(...last) - Math.min(...last) < 200) {
+    probeStop(); probe.hops = 0; setState('good'); return;   // 6 allers-retours de suite rapides et reguliers
+  }
+  // Toujours mauvais apres 12 s : on change de serveur relais (par internet seulement), 2 fois au plus
+  if (pc().key && performance.now() - probe.since > 12000) {
+    if (probe.hops < 2) { probe.hops++; const r = relayOf(pc()); r.bi = (r.wi + 1) % r.B.length; store.set('broker', r.bi); r.drop(); connect(); }
+    else { probeStop(); setState('slow'); }
+  }
 }
 
 // ---------- Canal temps reel (WebSocket), mouvements regroupes a chaque image
@@ -880,13 +919,14 @@ function connect(){
   sock.onopen = () => sock.send(JSON.stringify({token: pin}));
   sock.onmessage = e => {
     const m = JSON.parse(e.data);
-    if (CTRL.includes(m.t)) onCtrl(m);
-    else if (m.auth === true) { ready = true; setState('ok'); if (m.busy) showHeld('busy'); else hideHeld(); }
+    if (m.t === 'pong') probePong(m.i);
+    else if (CTRL.includes(m.t)) onCtrl(m);
+    else if (m.auth === true) { ready = true; if (m.busy) showHeld('busy'); else hideHeld(); probeStart(); }
     else if (m.auth === false) { savePin(''); showLock('Session expirée, tape le nouveau code'); }
   };
   sock.onclose = () => {
     if (ws !== sock) return;
-    ready = false; if (!pin) return;
+    ready = false; probeStop(); if (!pin) return;
     setState(navigator.onLine === false ? 'net' : 'bad');
     retry = setTimeout(() => { if (ws === sock) connect(); }, 1200);
   };
