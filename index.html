@@ -943,14 +943,15 @@ function qualTick(){
 function qualPong(i){ const t0 = qual.sent[i]; if (!t0) return; delete qual.sent[i]; qual.rtts.push(performance.now() - t0); qualShow(); }
 function qualShow(){
   const last = qual.rtts.slice(-6);
-  let pk = '';
+  let pk = '', plost = 0;
   if (last.length >= 2) {
     const srt = [...last].sort((a, b) => a - b), med = srt[srt.length >> 1], lost = last.filter(r => r >= 9999).length;
     const jit = srt[srt.length - 1 - lost] - srt[0];
-    pk = (!lost && med < 150 && jit < 50) ? 'a' : (lost <= 1 && med < 350 && jit < 120) ? 'b' : 'c';
+    pk = (!lost && med < 150 && jit < 50) ? 'a' : (lost <= 1 && med < 350 && jit < 120) ? 'b' : 'c'; plost = lost;
   }
-  // Un geste recent (moins de 20 s) fait foi ; les pings ne peuvent que l'aggraver (pings perdus, liaison coupee).
-  const k = qual.mk && performance.now() - qual.mat < 20000 ? (pk === 'c' ? 'c' : qual.mk) : pk;
+  // Un geste recent (moins de 20 s) fait foi : c'est ce que le curseur a vecu sur le PC. Les pings ne
+  // l'aggravent que s'ils se perdent (liaison qui decroche) ; un ping lent pendant un geste ne dit rien de plus.
+  const k = qual.mk && performance.now() - qual.mat < 20000 ? (plost >= 2 ? 'c' : qual.mk) : pk;
   if (!k) return;
   qual.k = k;
   const q = $('#qual'); q.className = 'qual ' + k;
