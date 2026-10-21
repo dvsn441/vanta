@@ -707,12 +707,25 @@ class Relay {
   }
   send(obj){ this.sendText(JSON.stringify(obj)); }
   // Attend une reponse du PC d'un type donne ; null si rien dans le delai.
-  request(obj, type, ms){
+  // Connexion qui a pu mourir en silence (iPhone mis en veille, appli rouverte) : on la lache et on en rouvre une.
+  drop(){
+    const dead = this.ws, was = this.ok; this.ws = null; this.ok = false;
+    if (dead) { try { dead.close(); } catch(e){} }
+    if (was) this.emit({t: 'down'});
+  }
+  stale(){ return this.ok && (!this.ws || this.ws.readyState !== 1 || Date.now() - this.lastRx > 6000); }
+  request(obj, type, ms, again = true){
+    if (this.stale()) this.drop();
     return this.open().then(ok => !ok ? null : new Promise(done => {
       const off = this.listen(m => { if (m.t === type || m.t === 'down') { off(); clearTimeout(t); done(m.t === type ? m : null); } });
       const t = setTimeout(() => { off(); done(null); }, ms);
       this.send(obj);
-    }));
+    })).then(r => {
+      // Pas de reponse : une seule nouvelle tentative, sur une connexion neuve (tous les serveurs en meme temps).
+      if (r || !again) return r;
+      this.drop();
+      return this.request(obj, type, ms, false);
+    });
   }
   listen(fn){ this.subs.add(fn); return () => this.subs.delete(fn); }
   emit(m){ [...this.subs].forEach(fn => { try { fn(m); } catch(e){} }); }
@@ -867,6 +880,8 @@ function act(action, body){
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { hiddenAt = Date.now(); keepSess(); return; }
+  // Retour dans l'appli : les connexions internet ont pu mourir pendant la veille, on les refait tout de suite.
+  Object.values(relays).forEach(r => { if (r.stale()) { r.drop(); r.open(); } });
   if (pin && hiddenAt && Date.now() - hiddenAt > AWAY_MAX) {
     Object.keys(pins).forEach(k => delete pins[k]); pin = ''; keepSess(); connect(); showLock(); return;
   }
@@ -1148,10 +1163,8 @@ async function digit(d){
   }
   // Internet en panne mais meme Wi-Fi que le PC : on propose le chemin direct (adresse venue du QR code).
   const lanPc = pcs.find(p => p.key && p.lan);
-  if (lanPc && tries.length && tries.every(t => t.status === 0)
-      && confirm('Internet ne répond pas.\nSi ce téléphone est sur le même Wi-Fi que ' + lanPc.name + ', touche OK pour passer en direct.')) {
-    goDirect(lanPc); return;
-  }
+  // (Plus de fenetre « Internet ne repond pas » : le relais a deja reessaye tout seul sur une connexion neuve.
+  //  Le bouton « Meme Wi-Fi que le PC ? Mode direct » reste en bas de l'ecran pour ce cas.)
   lockMsg(tries.some(t => t.status === 429) ? 'Trop de codes faux par internet. Sur l’ordinateur, clique « Débloquer » dans la fenêtre Vanta (ou attends 15 min).'
         : tries.every(t => t.status === 0) ? 'Ton ordinateur ne répond pas. Vérifie que Vanta tourne dessus, puis rescanne son QR code : il change quand Vanta est réinstallé.' : 'Code incorrect', true);
   $('#dots').classList.add('shake', 'err'); navigator.vibrate && navigator.vibrate([30, 40, 30]);
