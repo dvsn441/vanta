@@ -822,7 +822,7 @@ function relaySocket(p){
     if (s.readyState === 3) return;
     if (!ok) return shut();
     off = r.listen(m => { if (m.cum) r.cum = true; if (m.t === 'down') shut();
-      else if ('auth' in m || CTRL.includes(m.t) || m.t === 'pong') s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth, busy: m.busy, t: m.t, i: m.i})}); });
+      else if ('auth' in m || CTRL.includes(m.t) || m.t === 'pong' || m.t === 'mt') s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth, busy: m.busy, t: m.t, i: m.i, x: m.x, y: m.y})}); });
     s.readyState = 1; s.onopen && s.onopen();
   });
   return s;
@@ -920,6 +920,7 @@ function connect(){
   sock.onmessage = e => {
     const m = JSON.parse(e.data);
     if (m.t === 'pong') probePong(m.i);
+    else if (m.t === 'mt') gotTail(m);
     else if (CTRL.includes(m.t)) onCtrl(m);
     else if (m.auth === true) { ready = true; if (m.busy) showHeld('busy'); else hideHeld(); probeStart(); }
     else if (m.auth === false) { savePin(''); showLock('Session expirée, tape le nouveau code'); }
@@ -931,7 +932,14 @@ function connect(){
     retry = setTimeout(() => { if (ws === sock) connect(); }, 1200);
   };
 }
-let lastTx = 0, TX = 0, TY = 0, tailT = 0;
+let lastTx = 0, TX = 0, TY = 0, tailT = 0, tailN = 0;
+// Fin de geste : on renvoie le total jusqu'a ce que le PC confirme l'avoir recu ({t:'mt'}), 6 fois au plus.
+function sendTail(){
+  if (!ready || !ws || tailN++ >= 6) return;
+  ws.send(`["M",${TX},${TY},0,0]`);
+  tailT = setTimeout(sendTail, 300);
+}
+function gotTail(m){ if (m.x === TX && m.y === TY) { clearTimeout(tailT); tailN = 9; } }
 function frame(){
   raf = 0;
   if (!ready) { mx = my = sy = 0; return; }
@@ -945,7 +953,7 @@ function frame(){
       TX += ix; TY += iy; ws.send(`["M",${TX},${TY},${ix},${iy}]`);
       // Le dernier paquet peut se perdre sur le serveur relais : on renvoie le total une fois le geste fini
       // (sans effet s'il etait bien arrive, le PC ne bouge que de la difference).
-      clearTimeout(tailT); tailT = setTimeout(() => { if (ready && ws) ws.send(`["M",${TX},${TY},0,0]`); }, 180);
+      clearTimeout(tailT); tailN = 0; tailT = setTimeout(sendTail, 180);
     }
     else ws.send(`["m",${ix},${iy}]`);
     mx -= ix; my -= iy;
