@@ -909,7 +909,7 @@ function probeJudge(){
 let ws = null, ready = false, mx = 0, my = 0, sy = 0, raf = 0, retry = 0;
 function connect(){
   if (ws) { const old = ws; ws = null; try { old.close(); } catch(e){} }
-  ready = false; clearTimeout(retry); hideHeld();
+  ready = false; clearTimeout(retry); hideHeld(); TX = TY = 0;   // nouveaux totaux a chaque connexion
   if (!pin) { setState('idle'); return; }
   if (navigator.onLine === false) { setState('net'); return; }
   setState(state === 'bad' ? 'bad' : 'wait');
