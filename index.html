@@ -451,6 +451,8 @@ if (qr.get('k') && window.crypto && crypto.subtle) {
   const k = qr.get('k'), fp = qr.get('f') || '', name = qr.get('n') || 'Ordinateur', lan = qr.get('l') || '';
   // b = serveurs relais du PC, seulement s'ils sont changes dans son config.json (tests, relais a soi)
   const brokers = (qr.get('b') || '').split(' ').filter(u => /^wss?:\/\//.test(u));
+  // Meme PC reinstalle (nouvelle cle) : l'ancienne entree ne repondra plus jamais, on la remplace.
+  pcs = pcs.filter(p => !(p.key && p.key !== k && p.name === name));
   const m = pcs.find(p => p.key === k);
   if (m) { m.name = name; m.lan = lan; m.brokers = brokers; m.fp = fp; } else pcs.push({name, key: k, fp, lan, brokers, url: 'relay:' + k.slice(0, 12)});
   store.set('cur', pcs.findIndex(p => p.key === k));
@@ -1113,6 +1115,13 @@ async function digit(d){
   // On n'attend pas un PC eteint : le premier qui accepte gagne, les autres abandonnent apres 4 s.
   const tries = [];
   const targets = pcs.map((p, i) => i).filter(i => !pcs[i].none && (pcs[i].key || !live || live.has(i)));
+  if (!targets.length) {
+    lockMsg('Aucun ordinateur enregistré sur ce téléphone. Touche « Scanner le QR code » et vise la fenêtre Vanta de ton ordinateur.', true);
+    $('#lockScan').hidden = !HOSTED;
+    $('#dots').classList.add('shake', 'err');
+    setTimeout(() => { $('#dots').classList.remove('shake', 'err'); entry = ''; paintDots(); busy = false; }, 480);
+    return;
+  }
   const hit = await new Promise(done => {
     let left = targets.length;
     if (!left) return done(null);
@@ -1133,7 +1142,7 @@ async function digit(d){
     goDirect(lanPc); return;
   }
   lockMsg(tries.some(t => t.status === 429) ? 'Trop de codes faux par internet. Sur l’ordinateur, clique « Débloquer » dans la fenêtre Vanta (ou attends 15 min).'
-        : tries.every(t => t.status === 0) ? 'Aucun ordinateur joignable' : 'Code incorrect', true);
+        : tries.every(t => t.status === 0) ? 'Ton ordinateur ne répond pas. Vérifie que Vanta tourne dessus, puis rescanne son QR code : il change quand Vanta est réinstallé.' : 'Code incorrect', true);
   $('#dots').classList.add('shake', 'err'); navigator.vibrate && navigator.vibrate([30, 40, 30]);
   setTimeout(() => { $('#dots').classList.remove('shake', 'err'); entry = ''; paintDots(); busy = false; }, 480);
 }
