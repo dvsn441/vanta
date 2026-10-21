@@ -521,7 +521,8 @@ function cancelPairing(except){
 // Verification du code par le relais : meme reponse que /api/pair/confirm ({status, token}).
 function relayConfirm(p, code){
   return relayOf(p).request({t: 'pair_confirm', code}, 'pair_result', 8000)
-    .then(r => !r ? {status: 0} : r.token ? {status: 200, token: r.token} : {status: r.status || 401});
+    .then(r => { if (r && r.cum) relayOf(p).cum = true;
+      return !r ? {status: 0} : r.token ? {status: 200, token: r.token} : {status: r.status || 401}; });
 }
 
 // ---------- Relais Internet : quand le telephone n'est pas sur le reseau du PC
@@ -811,7 +812,7 @@ function relaySocket(p){
   r.open().then(ok => {
     if (s.readyState === 3) return;
     if (!ok) return shut();
-    off = r.listen(m => { if (m.t === 'down') shut(); else if ('auth' in m) s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth})}); });
+    off = r.listen(m => { if (m.cum) r.cum = true; if (m.t === 'down') shut(); else if ('auth' in m) s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth})}); });
     s.readyState = 1; s.onopen && s.onopen();
   });
   return s;
@@ -858,7 +859,7 @@ function connect(){
     retry = setTimeout(() => { if (ws === sock) connect(); }, 1200);
   };
 }
-let lastTx = 0;
+let lastTx = 0, TX = 0, TY = 0;
 function frame(){
   raf = 0;
   if (!ready) { mx = my = sy = 0; return; }
@@ -866,7 +867,12 @@ function frame(){
   if (pc().key && performance.now() - lastTx < 25) { schedule(); return; }
   lastTx = performance.now();
   const ix = Math.trunc(mx), iy = Math.trunc(my), is = Math.trunc(sy);
-  if (ix || iy) { ws.send(`["m",${ix},${iy}]`); mx -= ix; my -= iy; }
+  if (ix || iy) {
+    // Par internet (PC recent), on joint le total depuis le debut : un paquet perdu par le relais est rattrape.
+    if (pc().key && relayOf(pc()).cum) { TX += ix; TY += iy; ws.send(`["M",${TX},${TY},${ix},${iy}]`); }
+    else ws.send(`["m",${ix},${iy}]`);
+    mx -= ix; my -= iy;
+  }
   if (is) { ws.send(`["s",${is}]`); sy -= is; }
 }
 const schedule = () => { if (!raf) raf = requestAnimationFrame(frame); };
