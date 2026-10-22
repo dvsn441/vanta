@@ -445,7 +445,7 @@ svg{display:block}
 </div>
 
 <script>
-const VERSION = '2.0';
+const VERSION = '2.1';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const store = {
   get(k, d){ try{ const v = localStorage.getItem('jr.' + k); return v === null ? d : JSON.parse(v) }catch(e){ return d } },
