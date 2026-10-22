@@ -884,7 +884,7 @@ function retryP2p(s, r){
   s.tries = (s.tries || 0) + 1; if (s.tries > 6 || s.readyState !== 1) return;
   setTimeout(() => { if (s.readyState === 1 && !s.rtc && ws === s) p2pStart(s, r); }, 3000 * s.tries);
 }
-function renderVia(){ const d = ws && ws.dc && ws.dc.readyState === 'open'; document.body.classList.toggle('p2p', !!d); renderSay && renderSay(); }
+function renderVia(){ const d = ws && ws.dc && ws.dc.readyState === 'open'; if (!!d !== document.body.classList.contains('p2p')) { qual.rtts = []; qual.reps = []; } document.body.classList.toggle('p2p', !!d); renderSay && renderSay(); }
 
 // ---------- Un seul telephone aux commandes
 // Le PC n'obeit qu'a un telephone a la fois. Les autres recoivent « busy » (un autre pilote en ce moment)
