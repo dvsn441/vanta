@@ -445,7 +445,7 @@ svg{display:block}
 </div>
 
 <script>
-const VERSION = '1.11';
+const VERSION = '2.0';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const store = {
   get(k, d){ try{ const v = localStorage.getItem('jr.' + k); return v === null ? d : JSON.parse(v) }catch(e){ return d } },
@@ -829,21 +829,62 @@ async function startScan(){
   }
 }
 // Imite un WebSocket vers le PC, pour que connect() serve aux deux chemins.
+// 2.0 : une fois le code accepte, on ouvre en plus une liaison directe avec le PC (WebRTC). Meme Wi-Fi :
+// de machine a machine ; 4G : en direct a travers les box (STUN). Tout passe alors par elle, le relais
+// ne sert plus que de secours : si elle tombe, les messages repartent par le relais sans rien perdre.
 function relaySocket(p){
-  const r = relayOf(p), s = {readyState: 0, onopen: null, onmessage: null, onclose: null};
+  const r = relayOf(p), s = {readyState: 0, onopen: null, onmessage: null, onclose: null, dc: null, rtc: null};
   let off = () => {};
-  const shut = () => { if (s.readyState === 3) return; s.readyState = 3; off(); s.onclose && s.onclose(); };
-  s.send = text => r.sendText(text);
-  s.close = () => { s.readyState = 3; off(); };
+  const deliver = m => { if (m.cum) r.cum = true;
+    if ('auth' in m || CTRL.includes(m.t) || m.t === 'pong' || m.t === 'mt' || m.t === 'q') s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth, busy: m.busy, t: m.t, i: m.i, x: m.x, y: m.y, n: m.n, l: m.l, d: m.d})}); };
+  const shut = () => { if (s.readyState === 3) return; s.readyState = 3; off(); p2pStop(s); s.onclose && s.onclose(); };
+  s.send = text => { if (s.dc && s.dc.readyState === 'open') { try { s.dc.send(text); return; } catch(e){} } r.sendText(text); };
+  s.close = () => { s.readyState = 3; off(); p2pStop(s); };
+  s.deliver = deliver;
   r.open().then(ok => {
     if (s.readyState === 3) return;
     if (!ok) return shut();
-    off = r.listen(m => { if (m.cum) r.cum = true; if (m.t === 'down') shut();
-      else if ('auth' in m || CTRL.includes(m.t) || m.t === 'pong' || m.t === 'mt' || m.t === 'q') s.onmessage && s.onmessage({data: JSON.stringify({auth: m.auth, busy: m.busy, t: m.t, i: m.i, x: m.x, y: m.y, n: m.n, l: m.l, d: m.d})}); });
+    off = r.listen(m => {
+      // Relais tombe mais liaison directe vivante : on continue sans couper (le relais se refait a cote).
+      if (m.t === 'down') { if (s.dc && s.dc.readyState === 'open') { r.open(); return; } return shut(); }
+      deliver(m);
+      if (m.auth === true) p2pStart(s, r);
+    });
     s.readyState = 1; s.onopen && s.onopen();
   });
   return s;
 }
+const STUN = [{urls: ['stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478']}];
+function p2pStop(s){ const c = s.rtc; s.rtc = null; s.dc = null; if (c) { try { c.close(); } catch(e){} } renderVia(); }
+async function p2pStart(s, r){
+  if (s.rtc || typeof RTCPeerConnection === 'undefined' || store.get('p2p', true) === false) return;
+  let c;
+  try { c = new RTCPeerConnection({iceServers: STUN}); } catch(e){ return; }
+  s.rtc = c;
+  const dc = c.createDataChannel('vanta', {ordered: true});
+  dc.onopen = () => { if (s.rtc !== c) return; s.dc = dc; renderVia(); };
+  dc.onmessage = e => { try { s.deliver(JSON.parse(e.data)); } catch(x){} };
+  dc.onclose = () => { if (s.dc === dc) { s.dc = null; s.rtc = null; renderVia(); try { c.close(); } catch(x){} retryP2p(s, r); } };
+  c.onconnectionstatechange = () => { if (c.connectionState === 'failed' && s.rtc === c) { p2pStop(s); retryP2p(s, r); } };
+  try {
+    await c.setLocalDescription(await c.createOffer());
+    // Invitation complete (adresses incluses) : on attend la collecte, 2 s au plus.
+    await new Promise(done => { if (c.iceGatheringState === 'complete') return done();
+      const t = setTimeout(done, 2000); c.onicegatheringstatechange = () => { if (c.iceGatheringState === 'complete') { clearTimeout(t); done(); } }; });
+    if (s.rtc !== c) return;
+    const a = await r.request({t: 'rtc', sdp: c.localDescription.sdp}, 'rtc', 8000, false);
+    if (s.rtc !== c) return;
+    if (!a || !a.sdp) { p2pStop(s); return; }   // PC d'avant la 2.0, ou liaison refusee : relais seul
+    await c.setRemoteDescription({type: 'answer', sdp: a.sdp});
+    setTimeout(() => { if (s.rtc === c && !s.dc) { p2pStop(s); retryP2p(s, r); } }, 10000);
+  } catch(e){ if (s.rtc === c) p2pStop(s); }
+}
+// Nouvel essai plus tard (changement de reseau, Wi-Fi -> 4G...), de plus en plus espace.
+function retryP2p(s, r){
+  s.tries = (s.tries || 0) + 1; if (s.tries > 6 || s.readyState !== 1) return;
+  setTimeout(() => { if (s.readyState === 1 && !s.rtc && ws === s) p2pStart(s, r); }, 3000 * s.tries);
+}
+function renderVia(){ const d = ws && ws.dc && ws.dc.readyState === 'open'; document.body.classList.toggle('p2p', !!d); renderSay && renderSay(); }
 
 // ---------- Un seul telephone aux commandes
 // Le PC n'obeit qu'a un telephone a la fois. Les autres recoivent « busy » (un autre pilote en ce moment)
@@ -954,7 +995,7 @@ function qualShow(){
   if (!k) return;
   qual.k = k;
   const q = $('#qual'); q.className = 'qual ' + k;
-  q.textContent = k === 'a' ? 'Fluide' : k === 'b' ? 'Correct' : 'Saccades';
+  q.textContent = (k === 'a' ? 'Fluide' : k === 'b' ? 'Correct' : 'Saccades') + (ws && ws.dc ? ' · direct' : '');
   renderSay();
   if (state === 'slow' && k !== 'c') setState('ok');   // « Internet lent » s'efface des que ca va mieux
 }
@@ -977,7 +1018,7 @@ function probeJudge(){
     probeStop(); probe.hops = 0; setState('good'); qualStart(); return;   // 6 allers-retours de suite rapides et reguliers
   }
   // Toujours mauvais apres 12 s : on change de serveur relais (par internet seulement), 2 fois au plus
-  if (pc().key && performance.now() - probe.since > 12000) {
+  if (pc().key && !(ws && ws.dc) && performance.now() - probe.since > 12000) {
     if (probe.hops < 2) { probe.hops++; const r = relayOf(pc()); r.bi = (r.wi + 1) % r.B.length; store.set('broker', r.bi); r.drop(); connect(); }
     else { probeStop(); setState('slow'); qualStart(); }
   }
@@ -1029,7 +1070,7 @@ function frame(){
   raf = 0;
   if (!ready) { mx = my = sy = 0; return; }
   // Par Internet, 50 envois par seconde au plus (les serveurs publics n'aiment pas les rafales).
-  if (pc().key && performance.now() - lastTx < 20) { schedule(); return; }
+  if (pc().key && !(ws && ws.dc) && performance.now() - lastTx < 20) { schedule(); return; }
   lastTx = performance.now();
   const ix = Math.trunc(mx), iy = Math.trunc(my), is = Math.trunc(sy), t = Math.round(mts);
   if (ix || iy) {
