@@ -1,0 +1,13 @@
+[
+{"id":"s01","chap":"","text":"Mastin, je te présente Friday. Ton assistant à toi : le même principe que Jarvis, celui de Daniel, mais à ton nom. En deux minutes, ce que c'est, et comment l'installer."},
+{"id":"s02","chap":"Ce que c'est","text":"Jarvis, c'est un projet Claude. Une conversation principale qui garde une mémoire, et ouvre un fil pour chaque tâche. Daniel écrit une phrase depuis son iPhone. Jarvis comprend le but, fait toutes les étapes, vérifie, et revient avec un récap court."},
+{"id":"s03","chap":"Comment ça marche","text":"Pour agir, il prend l'outil le plus rapide. D'abord les connecteurs : Gmail, Drive, Notion. Ensuite le cloud : code, recherches, fichiers. Et en dernier recours, le PC, à distance."},
+{"id":"s04","chap":"Ce que Daniel en fait","text":"Daniel s'en sert pour tout : un mail, ranger son Drive, lancer sa musique, chiffrer une idée de business. La nuit, Jarvis travaille seul jusqu'à neuf heures, puis éteint le PC. Cette vidéo ? Il l'a écrite, doublée et montée tout seul."},
+{"id":"s05","chap":"Les skills","text":"Le vrai secret, ce sont les skills : des fiches de méthode que Claude applique tout seul. Dans le Jarvis de Daniel, elles sont actives par défaut. Mais elles vivent dans son compte : il s'en sert aussi dans ses autres projets. Tu en reçois trois : accès ordinateur, session de nuit, et slash jarvis, pour parler au Claude de Daniel dans Notion."},
+{"id":"s06","chap":"Installer Friday","text":"L'installation, en six étapes. Un : dans Claude, onglet Code, crée un projet nommé Friday. Deux : colle le fichier d'instructions, et remplis les cases."},
+{"id":"s07","chap":"Installer Friday","text":"Trois : importe les trois skills. Quatre : branche tes connecteurs. Pas de connecteur iCloud Mail : pour envoyer des mails, Friday a besoin d'un Gmail."},
+{"id":"s08","chap":"Installer Friday","text":"Cinq : installe l'appli Claude sur ton PC, et active le contrôle à distance. Six : teste. Demande-lui un fichier sur ton PC, puis écris : Notion. Friday répond à Jarvis."},
+{"id":"s09","chap":"Les astuces","text":"Quelques astuces. Ta première phrase, c'est l'objectif complet. Un chantier, un fil. Une règle te plaît ? Dis-lui de la retenir. Et demande-lui toujours comment il a fait, pour garder la main."},
+{"id":"s10","chap":"Les astuces","text":"Sur l'offre Pro, surveille ton quota. Et si l'onglet Projects n'apparaît pas, inscris-toi sur la liste d'attente, avec un projet classique en attendant."},
+{"id":"s11","chap":"","text":"Le guide et les fichiers sont dans le kit. Il ne reste qu'à lui donner du travail. Bienvenue, Friday."}
+]

@@ -1,0 +1,25 @@
+name: voix-friday
+on:
+  push:
+    branches: [voix-friday]
+permissions:
+  contents: write
+jobs:
+  voix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install edge-tts
+      - run: python tts.py "fr-FR-RemyMultilingualNeural" "+3%" > /dev/null
+      - run: |
+          tar czf out.tgz out
+          openssl rand -hex 32 > k.txt
+          openssl enc -aes-256-cbc -pbkdf2 -in out.tgz -out out.tgz.enc -pass file:k.txt
+          openssl pkeyutl -encrypt -pubin -inkey pub.pem -in k.txt -out k.enc
+          mkdir r; mv out.tgz.enc k.enc r/; cd r
+          git init -q -b voix-friday-out
+          git config user.name "voix"; git config user.email "voix@users.noreply.github.com"
+          git add -A; git commit -qm "voix"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" voix-friday-out
