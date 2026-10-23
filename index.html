@@ -6,16 +6,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Vanta">
+<meta name="apple-mobile-web-app-title" content="Thumbpad">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
 <meta name="format-detection" content="telephone=no">
-<link rel="apple-touch-icon" href="icon-180.png?v=4">
-<link rel="icon" type="image/png" href="icon-180.png?v=4">
+<link rel="apple-touch-icon" href="icon-180.png?v=5">
+<link rel="icon" type="image/png" href="icon-180.png?v=5">
 <link rel="manifest" href="manifest.webmanifest?v=5">
-<title>Vanta</title>
+<title>Thumbpad</title>
 <style>
-/* Vanta — direction « instrument » : noir absolu, filets d'un pixel, angles droits, typographie
+/* Thumbpad — direction « instrument » : noir absolu, filets d'un pixel, angles droits, typographie
    Futura / DIN (natives sur iPhone). Un seul accent : le bleu du point du logo. Aucun arrondi, aucune ombre. */
 :root{
   --bg:#000;
@@ -398,10 +398,10 @@ svg{display:block}
 </div>
 
 
-<div class="intro hidden" id="intro" role="dialog" aria-label="Prise en main de Vanta">
+<div class="intro hidden" id="intro" role="dialog" aria-label="Prise en main de Thumbpad">
   <div class="brand">
-    <svg class="mark" viewBox="0 0 1024 1024" aria-hidden="true"><path d="M300 360 L512 700 L724 360" fill="none" stroke="#fff" stroke-width="104" stroke-linecap="round" stroke-linejoin="round"/><circle cx="512" cy="300" r="52" fill="#0A84FF"/></svg>
-    <h1 style="font:500 12px var(--f-disp);letter-spacing:.42em;text-transform:uppercase">Vanta</h1>
+    <svg class="mark" viewBox="0 0 1024 1024" aria-hidden="true"><path d="M300 278h424v104H564v364H460V382H300z" fill="#F2F2F0"/><circle cx="686" cy="690" r="56" fill="#0A84FF"/></svg>
+    <h1 style="font:500 12px var(--f-disp);letter-spacing:.42em;text-transform:uppercase">Thumbpad</h1>
     <span class="cap" id="introTag" style="margin-left:auto;color:var(--ink3)">Bienvenue</span>
   </div>
   <div class="prog" id="prog"></div>
@@ -416,14 +416,14 @@ svg{display:block}
   <div class="lock-head">
     
     <div class="brand">
-      <svg class="mark" viewBox="0 0 1024 1024" aria-hidden="true"><path d="M300 360 L512 700 L724 360" fill="none" stroke="#fff" stroke-width="104" stroke-linecap="round" stroke-linejoin="round"/><circle cx="512" cy="300" r="52" fill="#0A84FF"/></svg>
-      <h1>Vanta</h1>
+      <svg class="mark" viewBox="0 0 1024 1024" aria-hidden="true"><path d="M300 278h424v104H564v364H460V382H300z" fill="#F2F2F0"/><circle cx="686" cy="690" r="56" fill="#0A84FF"/></svg>
+      <h1>Thumbpad</h1>
       <span class="cap">Remote</span>
     </div>
     <div class="lock-art" aria-hidden="true"><svg viewBox="0 0 240 150">
       <rect x="1" y="1" width="238" height="128" fill="none" stroke="#2A2A2E"/><path d="M100 129v16h40v-16M84 149h72" fill="none" stroke="#2A2A2E"/>
       <rect x="8" y="8" width="70" height="30" fill="#0B0B0D" stroke="#0A84FF"/>
-      <text x="14" y="19" fill="#8A8A8E" font-size="5.5" letter-spacing="1.2" font-family="Futura, Century Gothic, sans-serif">CODE VANTA</text>
+      <text x="14" y="19" fill="#8A8A8E" font-size="5.5" letter-spacing="1.2" font-family="Futura, Century Gothic, sans-serif">CODE THUMBPAD</text>
       <text x="14" y="33" fill="#F2F2F0" font-size="12" font-family="DIN Alternate, Bahnschrift, sans-serif">• • •  • • •</text>
       <path d="M86 23h26" stroke="#0A84FF" stroke-dasharray="2 3"/><text x="116" y="26" fill="#55555A" font-size="7" letter-spacing="1" font-family="Futura, Century Gothic, sans-serif">ICI, SUR TON ORDINATEUR</text>
     </svg></div>
@@ -445,7 +445,7 @@ svg{display:block}
 </div>
 
 <script>
-const VERSION = '2.1';
+const VERSION = '2.2';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const store = {
   get(k, d){ try{ const v = localStorage.getItem('jr.' + k); return v === null ? d : JSON.parse(v) }catch(e){ return d } },
@@ -470,7 +470,7 @@ const clean = u => u.trim().replace(/\/+$/, '');
 let pcs = store.get(DEV_KEY, null) || store.get(secure ? 'pcs-https' : 'pcs', null);
 if (HOSTED) pcs = (pcs || []).filter(p => p.key);  // sur le site public, seuls les PC du relais ont un sens
 if (!pcs || !pcs.length) pcs = HOSTED ? [] : [{name: location.hostname.split('.')[0] || 'Cet ordinateur', url: here}];
-// QR code de Vanta : https://.../vanta/#k=<cle du PC>&n=<nom>&l=<adresse Wi-Fi de secours>
+// QR code de Thumbpad : https://.../thumbpad/#k=<cle du PC>&n=<nom>&l=<adresse Wi-Fi de secours>
 const qr = new URLSearchParams(location.hash.slice(1));
 if (qr.get('k') && window.crypto && crypto.subtle) {
   // f = empreinte de l'identite du PC : seul le vrai PC peut ouvrir une session avec ce telephone
@@ -485,7 +485,7 @@ if (qr.get('k') && window.crypto && crypto.subtle) {
   // Icone d'ecran d'accueil : elle rouvre ce lien complet (avec la cle), pas la page nue.
   try {
     const abs = f => new URL(f, location.href).href;
-    const man = {name: 'Vanta', short_name: 'Vanta', start_url: location.href, display: 'standalone', background_color: '#000000', theme_color: '#000000',
+    const man = {name: 'Thumbpad', short_name: 'Thumbpad', start_url: location.href, display: 'standalone', background_color: '#000000', theme_color: '#000000',
       icons: [{src: abs('icon-180.png'), sizes: '180x180', type: 'image/png'}, {src: abs('icon-512.png'), sizes: '512x512', type: 'image/png'}]};
     document.querySelector('link[rel=manifest]').href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(man));
   } catch(e){}
@@ -583,7 +583,7 @@ const Box = {
   async make(raw){
     const imp = b => crypto.subtle.importKey('raw', b, {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
     const base = await imp(raw), sub = async l => imp(new Uint8Array(await crypto.subtle.sign('HMAC', base, te.encode(l))));
-    const ke = await sub('vanta-enc'), km = await sub('vanta-mac');
+    const ke = await sub('thumbpad-enc'), km = await sub('thumbpad-mac');
     const mac = async (k, data) => new Uint8Array(await crypto.subtle.sign('HMAC', k, data));
     const xor = async (sens, nonce, data) => {
       const pre = cat(te.encode(sens), nonce), blocks = [];
@@ -623,8 +623,8 @@ class Relay {
     this.n = 0; this.ws = null; this.ok = false; this.opening = null; this.subs = new Set(); this.q = Promise.resolve();
     this.bi = store.get('broker', 0) % this.B.length; this.lastRx = 0; this.wi = 0; this.tick = 0;
     this.ready = (async () => {
-      const h = new Uint8Array(await crypto.subtle.digest('SHA-256', cat(te.encode('vanta-room:'), this.raw)));
-      const room = hex(h).slice(0, 32); this.up = 'vanta/' + room + '/up'; this.down = 'vanta/' + room + '/down';
+      const h = new Uint8Array(await crypto.subtle.digest('SHA-256', cat(te.encode('thumbpad-room:'), this.raw)));
+      const room = hex(h).slice(0, 32); this.up = 'thumbpad/' + room + '/up'; this.down = 'thumbpad/' + room + '/down';
       this.box = await Box.make(this.raw);   // cle du QR : seulement pour l'echange "dh"
       const x = BigInt('0x' + hex(crypto.getRandomValues(new Uint8Array(32)))) | (1n << 255n);
       this.x = x; this.pub = modpow(2n, x, DH_P); this.sbox = null; this.pcPub = null;
@@ -662,7 +662,7 @@ class Relay {
       const timer = setTimeout(() => finish(false), 5000);
       try { ws = new WebSocket(this.B[i], 'mqtt'); } catch(e){ return finish(false); }
       ws.binaryType = 'arraybuffer'; if (this.race) this.race.add(ws); else { this.ws = ws; this.wi = i; }
-      ws.onopen = () => ws.send(mq.connect('vanta-ph-' + this.me + Math.random().toString(36).slice(2, 6)));
+      ws.onopen = () => ws.send(mq.connect('thumbpad-ph-' + this.me + Math.random().toString(36).slice(2, 6)));
       ws.onmessage = e => {
         buf = cat(buf, new Uint8Array(e.data)); let p;
         while ((p = mq.parse(buf))) { buf = buf.slice(p.size); this.packet(ws, p, finish); }
@@ -699,11 +699,11 @@ class Relay {
             if (b64u(idh) !== this.fp) return;
             // 2) cle de session : echange ephemere + echange avec l'identite du PC (seul le vrai PC la connait)
             const shared = modpow(y, this.x, DH_P), sharedId = modpow(id, this.x, DH_P);
-            const k = new Uint8Array(await crypto.subtle.digest('SHA-256', [te.encode('vanta-sess'), this.raw, this.sid,
+            const k = new Uint8Array(await crypto.subtle.digest('SHA-256', [te.encode('thumbpad-sess'), this.raw, this.sid,
               i2b(this.pub), i2b(y), i2b(id), i2b(shared), i2b(sharedId)].reduce(cat)));
             // 3) preuve "c" : un porteur du QR qui se ferait passer pour le PC est rejete ici
             const ck = await crypto.subtle.importKey('raw', k, {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
-            const c = hex(new Uint8Array(await crypto.subtle.sign('HMAC', ck, cat(te.encode('vanta-ok'), this.sid))));
+            const c = hex(new Uint8Array(await crypto.subtle.sign('HMAC', ck, cat(te.encode('thumbpad-ok'), this.sid))));
             if (c !== m.c) return;
             this.sbox = await Box.make(k); this.pcPub = y;
           }
@@ -777,7 +777,7 @@ const relayOf = p => relays[p.key] || (relays[p.key] = new Relay(p.key, p.broker
 
 // ---------- Scanner integre (site public seulement : la camera exige HTTPS)
 // Sur iPhone, l'icone d'ecran d'accueil ne partage rien avec Safari : si elle s'ouvre sans la cle,
-// elle doit pouvoir lire le QR code de Vanta elle-meme. Lecteur natif (Android/Chrome) sinon jsQR 1.4.0,
+// elle doit pouvoir lire le QR code de Thumbpad elle-meme. Lecteur natif (Android/Chrome) sinon jsQR 1.4.0,
 // charge seulement a la demande, verifie par son empreinte (integrity) : d'abord la copie publiee a cote de
 // l'appli (meme site GitHub Pages), sinon le CDN. Empreinte verifiee sur le paquet npm officiel jsqr-1.4.0.
 const JSQR = ['jsQR.js', 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'];
@@ -790,14 +790,14 @@ const loadOne = src => new Promise((ok, ko) => {
 const loadJsQR = () => window.jsQR ? Promise.resolve() : loadOne(JSQR[0]).catch(() => loadOne(JSQR[1]));
 function useScanned(text){
   let u; try { u = new URL(text); } catch(e){ return false; }
-  // Seuls les QR codes Vanta de ce meme site sont acceptes (ils portent la cle k du PC).
-  if (u.origin !== location.origin || !new URLSearchParams(u.hash.slice(1)).get('k')) { $('#scanTip').textContent = 'Ce n’est pas le QR code de Vanta.'; return false; }
+  // Seuls les QR codes Thumbpad de ce meme site sont acceptes (ils portent la cle k du PC).
+  if (u.origin !== location.origin || !new URLSearchParams(u.hash.slice(1)).get('k')) { $('#scanTip').textContent = 'Ce n’est pas le QR code de Thumbpad.'; return false; }
   stopScan(); history.replaceState(null, '', u.href); location.reload(); return true;
 }
 function stopScan(){ if (scanStream) scanStream.getTracks().forEach(t => t.stop()); scanStream = null; $('#scan').classList.add('hidden'); }
 async function startScan(){
   const v = $('#scanVid');
-  $('#scanTip').textContent = 'Vise le QR code affiché par Vanta sur l’ordinateur.'; $('#scan').classList.remove('hidden');
+  $('#scanTip').textContent = 'Vise le QR code affiché par Thumbpad sur l’ordinateur.'; $('#scan').classList.remove('hidden');
   // Lecteur d'abord, camera ensuite : chaque panne a son propre message (et la bonne solution).
   let det = null;
   try { if ('BarcodeDetector' in window) det = new BarcodeDetector({formats: ['qr_code']}); } catch(e){}
@@ -861,7 +861,7 @@ async function p2pStart(s, r){
   let c;
   try { c = new RTCPeerConnection({iceServers: STUN}); } catch(e){ return; }
   s.rtc = c;
-  const dc = c.createDataChannel('vanta', {ordered: true});
+  const dc = c.createDataChannel('thumbpad', {ordered: true});
   dc.onopen = () => { if (s.rtc !== c) return; s.dc = dc; renderVia(); };
   dc.onmessage = e => { try { s.deliver(JSON.parse(e.data)); } catch(x){} };
   dc.onclose = () => { if (s.dc === dc) { s.dc = null; s.rtc = null; renderVia(); try { c.close(); } catch(x){} retryP2p(s, r); } };
@@ -889,7 +889,7 @@ function renderVia(){ const d = ws && ws.dc && ws.dc.readyState === 'open'; if (
 // ---------- Un seul telephone aux commandes
 // Le PC n'obeit qu'a un telephone a la fois. Les autres recoivent « busy » (un autre pilote en ce moment)
 // ou « taken » (un autre vient de prendre la main) ; « free » : on a la main ; « kicked » : deconnecte
-// depuis l'ordinateur (raccourci Ctrl+Alt+X ou lien de la fenetre Vanta), il faudra un nouveau code.
+// depuis l'ordinateur (raccourci Ctrl+Alt+X ou lien de la fenetre Thumbpad), il faudra un nouveau code.
 const CTRL = ['busy', 'taken', 'free', 'kicked'];
 function showHeld(kind){
   $('#heldTxt').textContent = kind === 'taken' ? 'Un autre téléphone a pris la main sur ' + pc().name
@@ -1124,7 +1124,7 @@ function openSheet(){
     if (!pin) showLock();
   }, i === cur ? `<svg class="ico check"><use href="#i-check"/></svg>` : ''));
   row('Ajouter un appareil', '', 'i-edit', () => {
-    const url = prompt('Adresse de l’ordinateur (affichée par Vanta à son installation)', 'https://');
+    const url = prompt('Adresse de l’ordinateur (affichée par Thumbpad à son installation)', 'https://');
     if (!url || url === 'https://') return;
     const name = prompt('Nom de cet appareil', '') || '';
     if (!addDevice(name, url)) { alert('Adresse invalide : elle doit commencer par http:// ou https://'); return; }
@@ -1369,7 +1369,7 @@ async function digit(d){
   const tries = [];
   const targets = pcs.map((p, i) => i).filter(i => !pcs[i].none && (pcs[i].key || !live || live.has(i)));
   if (!targets.length) {
-    lockMsg('Aucun ordinateur. Scanne le QR code de Vanta.', true);
+    lockMsg('Aucun ordinateur. Scanne le QR code de Thumbpad.', true);
     $('#lockScan').hidden = !HOSTED;
     $('#dots').classList.add('shake', 'err');
     setTimeout(() => { $('#dots').classList.remove('shake', 'err'); entry = ''; paintDots(); busy = false; }, 480);
@@ -1393,14 +1393,14 @@ async function digit(d){
   // (Plus de fenetre « Internet ne repond pas » : le relais a deja reessaye tout seul sur une connexion neuve.
   //  Le bouton « Meme Wi-Fi que le PC ? Mode direct » reste en bas de l'ecran pour ce cas.)
   lockMsg(tries.some(t => t.status === 429) ? 'Trop d’essais. Débloque depuis l’ordinateur ou attends 15 min.'
-        : tries.every(t => t.status === 0) ? 'Ordinateur injoignable. Vanta réinstallé ? Rescanne son QR code.' : 'Code incorrect', true);
+        : tries.every(t => t.status === 0) ? 'Ordinateur injoignable. Thumbpad réinstallé ? Rescanne son QR code.' : 'Code incorrect', true);
   $('#dots').classList.add('shake', 'err'); navigator.vibrate && navigator.vibrate([30, 40, 30]);
   setTimeout(() => { $('#dots').classList.remove('shake', 'err'); entry = ''; paintDots(); busy = false; }, 480);
 }
 function showLock(msg, err){
   entry = ''; busy = false; paintDots(); if (!err) startPairing();
   $('#lockDirect').hidden = !lanOf();
-  if (pc().none) { msg = 'Scanne le QR code de Vanta sur ton ordinateur.'; err = false; }
+  if (pc().none) { msg = 'Scanne le QR code de Thumbpad sur ton ordinateur.'; err = false; }
   lockMsg(msg || 'Code affiché en haut à gauche de l’ordinateur.', err); typer.blur(); $('#lock').classList.remove('hidden');
 }
 function hideLock(){
@@ -1418,35 +1418,35 @@ const standalone = navigator.standalone === true || matchMedia('(display-mode: s
 const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const shareIco = '<svg class="share" viewBox="0 0 16 20" fill="none" stroke="#0A84FF" stroke-width="1.6"><path d="M8 1v12M3.5 5.5 8 1l4.5 4.5"/><path d="M5 8H1.5v11h13V8H11"/></svg>';
 const artDuo = '<svg viewBox="0 0 260 200"><rect x="10" y="30" width="150" height="100" fill="none" stroke="#2A2A2E"/><rect x="66" y="130" width="38" height="22" fill="none" stroke="#2A2A2E"/><path d="M50 152h70" stroke="#2A2A2E"/><rect x="190" y="50" width="60" height="118" fill="none" stroke="#F2F2F0"/><rect x="198" y="60" width="44" height="80" fill="none" stroke="#2A2A2E"/><circle cx="222" cy="98" r="4" fill="#0A84FF"/><circle cx="85" cy="80" r="4" fill="#0A84FF"/><path d="M172 98h12" stroke="#0A84FF" stroke-dasharray="2 4"/></svg>';
-const artCode = '<svg viewBox="0 0 260 200"><rect x="10" y="20" width="240" height="150" fill="none" stroke="#2A2A2E"/><rect x="18" y="28" width="96" height="40" fill="#0B0B0D" stroke="#0A84FF"/><text x="26" y="41" fill="#8A8A8E" font-size="7" letter-spacing="1.5" font-family="Futura, Century Gothic, sans-serif">CODE VANTA</text><text x="26" y="61" fill="#F2F2F0" font-size="17" font-family="DIN Alternate, Bahnschrift, sans-serif">482 917</text></svg>';
+const artCode = '<svg viewBox="0 0 260 200"><rect x="10" y="20" width="240" height="150" fill="none" stroke="#2A2A2E"/><rect x="18" y="28" width="96" height="40" fill="#0B0B0D" stroke="#0A84FF"/><text x="26" y="41" fill="#8A8A8E" font-size="7" letter-spacing="1.5" font-family="Futura, Century Gothic, sans-serif">CODE THUMBPAD</text><text x="26" y="61" fill="#F2F2F0" font-size="17" font-family="DIN Alternate, Bahnschrift, sans-serif">482 917</text></svg>';
 const artDone = '<svg viewBox="0 0 260 200"><circle cx="130" cy="100" r="62" fill="none" stroke="#2A2A2E"/><circle cx="130" cy="100" r="40" fill="none" stroke="#2A2A2E"/><path d="M130 38v16M130 146v16M68 100h16M176 100h16" stroke="#2A2A2E"/><circle cx="130" cy="100" r="7" fill="#0A84FF"/></svg>';
 const installSteps = isIOS
   ? '<li><span>Touche ' + shareIco + ' <b>Partager</b>, en bas de Safari (ou <b>•••</b> puis <b>Partager</b>).</span></li>'
   + '<li><span>Choisis <b>Sur l\'écran d\'accueil</b> (fais défiler la liste si besoin).</span></li>'
   + '<li><span>Touche <b>Ajouter</b>.</span></li>'
-  + '<li class="last"><span><b>Ferme Safari et ouvre l\'icône Vanta.</b></span></li>'
+  + '<li class="last"><span><b>Ferme Safari et ouvre l\'icône Thumbpad.</b></span></li>'
   :'<li><span>Touche <b>⋮</b>, en haut à droite de Chrome.</span></li>'
   + '<li><span>Choisis <b>Ajouter à l\'écran d\'accueil</b> ou <b>Installer l\'application</b>.</span></li>'
-  + '<li class="last"><span><b>Ferme Chrome et ouvre l\'icône Vanta.</b></span></li>';
+  + '<li class="last"><span><b>Ferme Chrome et ouvre l\'icône Thumbpad.</b></span></li>';
 const FLOWS = {
   web: [
     {art: artDuo, h: 'Ton téléphone devient ta souris.',
      p: 'Pavé tactile et clavier pour ton ordinateur. Rien à télécharger.'},
     {art: artCode, h: 'Un code, et c\'est tout.',
      p: 'À chaque ouverture, un code à six chiffres s\'affiche <b>en haut à gauche de l\'ordinateur</b>. Tu le tapes, tu pilotes.'},
-    {h: 'Ajoute Vanta à ton écran d\'accueil.',
-     p: 'Tu ouvriras Vanta depuis cette icône.',
+    {h: 'Ajoute Thumbpad à ton écran d\'accueil.',
+     p: 'Tu ouvriras Thumbpad depuis cette icône.',
      list: installSteps, final: true},
   ],
   app: [
-    {art: artDone, h: 'Vanta est installé.',
+    {art: artDone, h: 'Thumbpad est installé.',
      p: 'Tape le code affiché <b>en haut à gauche de l\'ordinateur</b>. Ce sera pareil à chaque fois.',
      cta: 'Taper le code'},
   ],
 };
 // Icone ouverte sans la cle du PC (rien a piloter) : on fait scanner le QR code au lieu de promettre un code.
-if (pc().none && HOSTED) FLOWS.app = [{art: artDone, h: 'Vanta est installé.',
-  p: 'Scanne le <b>QR code de Vanta</b> sur ton ordinateur, puis tape le code affiché en haut à gauche.',
+if (pc().none && HOSTED) FLOWS.app = [{art: artDone, h: 'Thumbpad est installé.',
+  p: 'Scanne le <b>QR code de Thumbpad</b> sur ton ordinateur, puis tape le code affiché en haut à gauche.',
   cta: 'Scanner le QR code', scan: true}];
 const flow = standalone ? 'app' : 'web';
 // Sur le site public aussi, on guide jusqu'a l'icone d'ecran d'accueil (elle rouvre le lien avec la cle).
