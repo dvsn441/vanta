@@ -1,5 +1,5 @@
 // Garde l'appli sur l'iPhone : elle s'ouvre meme si le PC qui l'a servie est eteint.
-const CACHE = 'vanta-v3';
+const CACHE = 'thumbpad-v4';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
