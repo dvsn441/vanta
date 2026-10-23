@@ -1,0 +1,46 @@
+**********************
+PowerShell transcript start
+Start time: 20261023235023
+Username: runnervmdaln5\runneradmin
+RunAs User: runnervmdaln5\runneradmin
+Configuration Name: 
+Machine: runnervmdaln5 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\Program Files\PowerShell\7\pwsh.dll -command . 'D:\a\_temp\3488bf03-71a9-400d-9812-90b401027bd6.ps1'
+Process ID: 8444
+PSVersion: 7.6.7
+PSEdition: Core
+GitCommitId: 7.6.7
+OS: Microsoft Windows 10.0.26100
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+Transcript started, output file is rapport/test-Windows.txt
+installeur : True 52722013
+--- mise a jour par-dessus un Thumbpad ouvert
+Thumbpad ouvert avant : True
+mise a jour, code de sortie : 0
+Thumbpad ferme par l'installeur : True
+ecran applications ouvertes : False
+{"name": "runnervmdaln5", "ok": true, "app": "Thumbpad", "version": "2.3", "peers": []}
+installe : True
+demarrage (Run) : "C:\Users\runneradmin\AppData\Local\Programs\Thumbpad\Thumbpad.exe" --hidden
+ancien raccourci Demarrage : False
+menu Demarrer : True
+Applications installees : "C:\Users\runneradmin\AppData\Local\Programs\Thumbpad\Thumbpad.exe" --uninstall
+liaison directe : True
+version (fichier) : 2.3
+--- apres desinstallation
+programme : False
+reglages : False
+Run : False
+menu Demarrer : False
+Applications installees : False
+>> TerminatingError(Invoke-WebRequest): "No connection could be made because the target machine actively refused it."
+port : ferme
+**********************
+PowerShell transcript end
+End time: 20261023235116
+**********************

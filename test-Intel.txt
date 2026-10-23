@@ -1,0 +1,13 @@
+dist/Thumbpad.app/Contents/MacOS/Thumbpad: Mach-O 64-bit executable x86_64
+aiortc 1.14.0 av 16.1.0
+curl: (28) Failed to connect to 127.0.0.1:8765 after 75008 ms: Could not connect to server
+{"name": "sjc20-cw761-8d85bb2d-6813-445e-83db-a90c8f8ef2b9-12B7BA740787", "ok": true, "app": "Thumbpad", "version": "2.3", "peers": []}--- log
+2026-10-23 23:53:40 lancement /Users/runner/work/vanta/vanta/dist/Thumbpad.app/Contents/MacOS/Thumbpad 
+2026-10-23 23:54:51 liaison directe indisponible (paquet aiortc absent : ModuleNotFoundError("No module named 'aiortc'")) : relais seulement
+2026-10-23 23:54:51 Thumbpad 2.3 demarre sur le port 8765 (sjc20-cw761-8d85bb2d-6813-445e-83db-a90c8f8ef2b9-12B7BA740787)
+2026-10-23 23:54:53 vraie souris prioritaire : oui ; raccourci Ctrl+Option+X : oui
+2026-10-23 23:54:53 page du telephone https://dvsn441.github.io/vanta/ : en ligne
+2026-10-23 23:54:53 relais connecte : broker.hivemq.com
+2026-10-23 23:54:54 relais connecte : broker.emqx.io
+--- stdout
+{"name": "sjc20-cw761-8d85bb2d-6813-445e-83db-a90c8f8ef2b9-12B7BA740787", "ok": true, "app": "Thumbpad", "version": "2.3", "peers": []}

@@ -1,0 +1,11 @@
+dist/Thumbpad.app/Contents/MacOS/Thumbpad: Mach-O 64-bit executable arm64
+aiortc 1.14.0 av 16.1.0
+{"name": "sjc22-be113-37daa727-4fac-4029-a44f-2f957e14685a-8ADADBB258BC", "ok": true, "app": "Thumbpad", "version": "2.3", "peers": []}--- log
+2026-10-23 23:50:14 lancement /Users/runner/work/vanta/vanta/dist/Thumbpad.app/Contents/MacOS/Thumbpad 
+2026-10-23 23:50:14 Thumbpad 2.3 demarre sur le port 8765 (sjc22-be113-37daa727-4fac-4029-a44f-2f957e14685a-8ADADBB258BC)
+2026-10-23 23:50:15 vraie souris prioritaire : oui ; raccourci Ctrl+Option+X : oui
+2026-10-23 23:50:15 page du telephone https://dvsn441.github.io/vanta/ : en ligne
+2026-10-23 23:50:15 relais connecte : broker.hivemq.com
+2026-10-23 23:50:15 relais connecte : broker.emqx.io
+--- stdout
+{"name": "sjc22-be113-37daa727-4fac-4029-a44f-2f957e14685a-8ADADBB258BC", "ok": true, "app": "Thumbpad", "version": "2.3", "peers": []}
