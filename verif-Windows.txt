@@ -1,0 +1,36 @@
+**********************
+PowerShell transcript start
+Start time: 20261023234916
+Username: runnervmdaln5\runneradmin
+RunAs User: runnervmdaln5\runneradmin
+Configuration Name: 
+Machine: runnervmdaln5 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\Program Files\PowerShell\7\pwsh.dll -command . 'D:\a\_temp\adeb7c55-3b90-4801-b215-b2e974ce0804.ps1'
+Process ID: 9032
+PSVersion: 7.6.7
+PSEdition: Core
+GitCommitId: 7.6.7
+OS: Microsoft Windows 10.0.26100
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+Transcript started, output file is out/verif-Windows.txt
+3B9595D258D0BEF948D424CB51B399EAD0A4187823D2E5A0982587BC02506F97
+PS>TerminatingError(Invoke-WebRequest): "No connection could be made because the target machine actively refused it."
+PS>TerminatingError(Invoke-WebRequest): "No connection could be made because the target machine actively refused it."
+{"name": "runnervmdaln5", "ok": true, "app": "Thumbpad", "version": "2.2", "peers": []}
+2026-10-23 23:49:24 lancement D:\a\vanta\vanta\Thumbpad.exe
+2026-10-23 23:49:26 installe dans C:\Users\runneradmin\AppData\Local\Programs\Thumbpad\Thumbpad.exe
+2026-10-23 23:49:30 lancement C:\Users\runneradmin\AppData\Local\Programs\Thumbpad\Thumbpad.exe
+2026-10-23 23:49:33 vraie souris prioritaire : oui ; raccourci Ctrl+Alt+X : oui
+2026-10-23 23:49:33 Thumbpad 2.2 demarre sur le port 8765 (runnervmdaln5)
+2026-10-23 23:49:33 relais connecte : broker.hivemq.com
+2026-10-23 23:49:34 relais connecte : broker.emqx.io
+2026-10-23 23:49:34 page du telephone https://dvsn441.github.io/vanta/ : en ligne
+**********************
+PowerShell transcript end
+End time: 20261023234940
+**********************

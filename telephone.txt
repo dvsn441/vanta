@@ -1,0 +1,371 @@
+version de la page : 2.2
+PC enregistres : jr.cur=0 | jr.sess=null | jr.devices=[{"name":"Robot","key":"WmZU_8p597j-D6Zj-NP6Qqp0RAchcZDPNR_JkqBMOR4","fp":"nvSrMgyPFcgjomrcwH3SOA","lan":"127.0.0.1:8765","brokers":[],"url":"relay:WmZU_8p597j-"}]
+code demande au PC : True 0.9 s
+console: WebSocket connection to 'wss://mqtt.eclipseprojects.io/mqtt' failed: WebSocket is closed before the connection is established.
+apres mauvais code : Code incorrect
+message : Code incorrect | deverrouille en 0.5 s
+etats de la liaison : ['settle', 'good', 'ok'] | allers-retours (ms) : [275, 270, 2, 1, 1, 2, 1, 1]
+qualite affichee : FLUIDE � DIRECT | [2, 1, 1, 1]
+LIAISON DIRECTE : True | qualite : FLUIDE � DIRECT
+etat avant : {"ready":true,"cum":true,"ok":true,"TX":0,"mx":0}
+etat apres : {"ready":true,"TX":300,"TY":150,"mx":0,"my":0}
+souris : (300, 300) -> (599, 449) attendu +300 +150
+geste continu : (599, 449) -> (959, 449) attendu +360 | rapports du PC : [(29, 0, 28), (30, 0, 27), (30, 0, 27), (30, 0, 26), (30, 0, 25), (31, 0, 24)] | mot : FLUIDE � DIRECT | message pave : (aucun)
+MESURE RELAIS : paquets 180 en retard 0 retard de lecture max 28 ms
+MOT COHERENT AVEC LA MESURE : True
+console: WebSocket connection to 'wss://mqtt.eclipseprojects.io/mqtt' failed: WebSocket is closed before the connection is established.
+souris apres veille : (959, 449) -> (761, 449) attendu -200 | verrou visible : False
+console: WebSocket connection to 'wss://mqtt.eclipseprojects.io/mqtt' failed: WebSocket is closed before the connection is established.
+RELANCE apres 3 s : pret True en 1.6 s | verrou False | etape icone affichee (normal dans un onglet) True | etats ['wait', 'settle'] | souris (761, 449) -> (561, 449) attendu -200 : True
+console: WebSocket connection to 'wss://mqtt.eclipseprojects.io/mqtt' failed: WebSocket is closed before the connection is established.
+RELANCE apres 10 s : pret True en 1.6 s | verrou False | etape icone affichee (normal dans un onglet) True | etats ['wait', 'settle'] | souris (561, 449) -> (361, 449) attendu -200 : True
+console 2: WebSocket connection to 'wss://mqtt.eclipseprojects.io/mqtt' failed: WebSocket is closed before the connection is established.
+2e telephone appaire : True | bandeau sur le 1er : True UN AUTRE T�L�PHONE A PRIS LA MAIN SUR ROBOT
+1er telephone pendant que le 2e a la main : (361, 449) -> (361, 449) attendu immobile
+2e telephone : (361, 449) -> (560, 449) attendu +200
+1er reprend la main : (560, 449) -> (361, 449) attendu -200 | bandeau sur le 2e : True
+apres Ctrl+Alt+X : True | D�connect� depuis l�ordinateur.
+UN SEUL TELEPHONE : True | RACCOURCI : True
+DEVERROUILLE
+2026-10-23 23:49:54 lancement D:\a\vanta\vanta\thumbpad.py --no-autostart
+2026-10-23 23:49:55 relais connecte : broker.hivemq.com
+2026-10-23 23:49:55 Thumbpad 2.3 demarre sur le port 8765 (runnervmdaln5)
+2026-10-23 23:49:55 vraie souris prioritaire : oui ; raccourci Ctrl+Alt+X : oui
+2026-10-23 23:49:55 relais connecte : broker.emqx.io
+2026-10-23 23:49:56 page du telephone https://dvsn441.github.io/vanta/ : en ligne
+2026-10-23 23:50:21 telephone appaire
+2026-10-23 23:50:31 test souris : total 10,5 -> 10,5
+2026-10-23 23:50:31 test souris : total 20,10 -> 10,5
+2026-10-23 23:50:32 test souris : total 30,15 -> 10,5
+2026-10-23 23:50:32 test souris : total 40,20 -> 10,5
+2026-10-23 23:50:32 test souris : total 50,25 -> 10,5
+2026-10-23 23:50:32 test souris : total 60,30 -> 10,5
+2026-10-23 23:50:32 test souris : total 70,35 -> 10,5
+2026-10-23 23:50:32 test souris : total 80,40 -> 10,5
+2026-10-23 23:50:32 test souris : total 90,45 -> 10,5
+2026-10-23 23:50:32 test souris : total 100,50 -> 10,5
+2026-10-23 23:50:32 test souris : total 110,55 -> 10,5
+2026-10-23 23:50:32 test souris : total 120,60 -> 10,5
+2026-10-23 23:50:32 test souris : total 130,65 -> 10,5
+2026-10-23 23:50:32 test souris : total 140,70 -> 10,5
+2026-10-23 23:50:32 test souris : total 150,75 -> 10,5
+2026-10-23 23:50:32 test souris : total 160,80 -> 10,5
+2026-10-23 23:50:32 test souris : total 170,85 -> 10,5
+2026-10-23 23:50:32 test souris : total 180,90 -> 10,5
+2026-10-23 23:50:32 test souris : total 190,95 -> 10,5
+2026-10-23 23:50:32 test souris : total 200,100 -> 10,5
+2026-10-23 23:50:32 test souris : total 210,105 -> 10,5
+2026-10-23 23:50:32 test souris : total 220,110 -> 10,5
+2026-10-23 23:50:32 test souris : total 230,115 -> 10,5
+2026-10-23 23:50:32 test souris : total 240,120 -> 10,5
+2026-10-23 23:50:32 test souris : total 250,125 -> 10,5
+2026-10-23 23:50:32 test souris : total 260,130 -> 10,5
+2026-10-23 23:50:32 test souris : total 270,135 -> 10,5
+2026-10-23 23:50:32 test souris : total 280,140 -> 10,5
+2026-10-23 23:50:32 test souris : total 290,145 -> 10,5
+2026-10-23 23:50:32 test souris : total 300,150 -> 10,5
+2026-10-23 23:50:32 test souris : total 300,150 -> 0,0
+2026-10-23 23:50:34 test souris : total 302,150 -> 2,0
+2026-10-23 23:50:34 test souris : total 304,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 306,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 308,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 310,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 312,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 314,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 316,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 318,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 320,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 322,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 324,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 326,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 328,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 330,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 332,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 334,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 336,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 338,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 340,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 342,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 344,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 346,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 348,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 350,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 352,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 354,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 356,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 358,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 360,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 362,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 364,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 366,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 368,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 370,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 372,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 374,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 376,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 378,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 380,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 382,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 384,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 386,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 388,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 390,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 392,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 394,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 396,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 398,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 400,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 402,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 404,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 406,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 408,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 410,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 412,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 414,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 416,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 418,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 420,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 422,150 -> 2,0
+2026-10-23 23:50:35 test souris : total 424,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 426,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 428,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 430,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 432,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 434,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 436,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 438,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 440,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 442,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 444,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 446,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 448,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 450,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 452,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 454,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 456,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 458,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 460,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 462,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 464,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 466,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 468,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 470,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 472,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 474,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 476,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 478,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 480,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 482,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 484,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 486,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 488,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 490,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 492,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 494,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 496,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 498,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 500,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 502,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 504,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 506,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 508,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 510,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 512,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 514,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 516,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 518,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 520,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 522,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 524,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 526,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 528,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 530,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 532,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 534,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 536,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 538,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 540,150 -> 2,0
+2026-10-23 23:50:36 test souris : total 542,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 544,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 546,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 548,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 550,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 552,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 554,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 556,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 558,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 560,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 562,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 564,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 566,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 568,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 570,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 572,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 574,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 576,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 578,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 580,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 582,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 584,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 586,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 588,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 590,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 592,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 594,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 596,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 598,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 600,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 602,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 604,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 606,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 608,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 610,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 612,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 614,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 616,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 618,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 620,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 622,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 624,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 626,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 628,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 630,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 632,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 634,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 636,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 638,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 640,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 642,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 644,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 646,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 648,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 650,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 652,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 654,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 656,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 658,150 -> 2,0
+2026-10-23 23:50:37 test souris : total 660,150 -> 2,0
+2026-10-23 23:50:38 test souris : total 660,150 -> 0,0
+2026-10-23 23:50:38 geste via relais direct : 179 paquets, 0 en retard, plus long trou 18 ms, retard de lecture 23 ms
+2026-10-23 23:50:43 test souris : total 650,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 640,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 630,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 620,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 610,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 600,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 590,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 580,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 570,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 560,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 550,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 540,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 530,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 520,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 510,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 500,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 490,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 480,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 470,150 -> -10,0
+2026-10-23 23:50:43 test souris : total 460,150 -> -10,0
+2026-10-23 23:50:44 test souris : total 460,150 -> 0,0
+2026-10-23 23:50:46 liaison directe fermee (le relais prend le relais)
+2026-10-23 23:50:51 test souris : total -10,0 -> -10,0
+2026-10-23 23:50:51 test souris : total -30,0 -> -20,0
+2026-10-23 23:50:51 test souris : total -50,0 -> -20,0
+2026-10-23 23:50:51 test souris : total -70,0 -> -20,0
+2026-10-23 23:50:51 test souris : total -90,0 -> -20,0
+2026-10-23 23:50:51 test souris : total -110,0 -> -20,0
+2026-10-23 23:50:51 test souris : total -180,0 -> -70,0
+2026-10-23 23:50:51 test souris : total -200,0 -> -20,0
+2026-10-23 23:50:51 test souris : total -200,0 -> 0,0
+2026-10-23 23:51:06 test souris : total -80,0 -> -80,0
+2026-10-23 23:51:06 test souris : total -90,0 -> -10,0
+2026-10-23 23:51:06 test souris : total -10,0 -> 80,0
+2026-10-23 23:51:06 test souris : total -100,0 -> -90,0
+2026-10-23 23:51:06 test souris : total -30,0 -> 70,0
+2026-10-23 23:51:06 test souris : total -110,0 -> -80,0
+2026-10-23 23:51:06 test souris : total -120,0 -> -10,0
+2026-10-23 23:51:06 test souris : total -50,0 -> 70,0
+2026-10-23 23:51:06 test souris : total -130,0 -> -80,0
+2026-10-23 23:51:06 test souris : total -140,0 -> -10,0
+2026-10-23 23:51:06 test souris : total -150,0 -> -10,0
+2026-10-23 23:51:06 test souris : total -160,0 -> -10,0
+2026-10-23 23:51:06 test souris : total -170,0 -> -10,0
+2026-10-23 23:51:06 test souris : total -180,0 -> -10,0
+2026-10-23 23:51:06 test souris : total -190,0 -> -10,0
+2026-10-23 23:51:06 test souris : total -200,0 -> -10,0
+2026-10-23 23:51:06 test souris : total -200,0 -> 0,0
+2026-10-23 23:51:13 telephone appaire
+2026-10-23 23:51:13 un autre telephone prend la main
+2026-10-23 23:51:15 test souris : refuse ['M', -190, 0] (tok ok, main False)
+2026-10-23 23:51:15 test souris : refuse ['M', -180, 0] (tok ok, main False)
+2026-10-23 23:51:15 test souris : refuse ['M', -170, 0] (tok ok, main False)
+2026-10-23 23:51:15 test souris : refuse ['M', -160, 0] (tok ok, main False)
+2026-10-23 23:51:15 test souris : refuse ['M', -150, 0] (tok ok, main False)
+2026-10-23 23:51:15 test souris : refuse ['M', -140, 0] (tok ok, main False)
+2026-10-23 23:51:15 test souris : refuse ['M', -120, 0] (tok ok, main False)
+2026-10-23 23:51:15 test souris : refuse ['M', -110, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', -100, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', -90, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', -80, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', -70, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', -60, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', -50, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', -40, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', -30, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', -20, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', -10, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', 0, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', 0, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', 0, 0] (tok ok, main False)
+2026-10-23 23:51:16 test souris : refuse ['M', 0, 0] (tok ok, main False)
+2026-10-23 23:51:17 test souris : refuse ['M', 0, 0] (tok ok, main False)
+2026-10-23 23:51:17 test souris : refuse ['M', 0, 0] (tok ok, main False)
+2026-10-23 23:51:17 test souris : refuse ['M', 0, 0] (tok ok, main False)
+2026-10-23 23:51:18 test souris : total 10,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 20,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 30,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 40,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 50,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 60,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 70,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 80,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 90,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 100,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 110,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 120,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 130,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 140,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 160,0 -> 20,0
+2026-10-23 23:51:18 test souris : total 170,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 180,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 190,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 200,0 -> 10,0
+2026-10-23 23:51:18 test souris : total 200,0 -> 0,0
+2026-10-23 23:51:20 un autre telephone prend la main
+2026-10-23 23:51:23 test souris : total -10,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -20,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -30,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -40,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -50,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -60,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -70,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -80,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -90,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -100,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -110,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -120,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -130,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -140,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -150,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -160,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -170,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -180,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -190,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -200,0 -> -10,0
+2026-10-23 23:51:23 test souris : total -200,0 -> 0,0
+2026-10-23 23:51:24 liaison directe fermee (le relais prend le relais)
+2026-10-23 23:51:26 raccourci Ctrl+Alt+X
+2026-10-23 23:51:26 telephones deconnectes depuis l'ordinateur (2)
+2026-10-23 23:51:26 liaison directe fermee (le relais prend le relais)
+2026-10-23 23:51:26 liaison directe fermee (le relais prend le relais)

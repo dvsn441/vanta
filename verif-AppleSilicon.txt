@@ -1,0 +1,49 @@
+page 200
+6043bacd1e70d372e8a63d4eedc170c346b2f40160cd0e9b95f32da87fc1ad9d  Thumbpad.dmg
+3b9595d258d0bef948d424cb51b399ead0a4187823d2e5a0982587bc02506f97  Thumbpad.exe
+Checksumming Protective Master Boot Record (MBR : 0)…
+Protective Master Boot Record (MBR :: verified   CRC32 $A0F5C9C6
+Checksumming GPT Header (Primary GPT Header : 1)…
+ GPT Header (Primary GPT Header : 1): verified   CRC32 $33B039F0
+Checksumming GPT Partition Data (Primary GPT Table : 2)…
+GPT Partition Data (Primary GPT Tabl: verified   CRC32 $55D049F2
+Checksumming  (Apple_Free : 3)…
+                    (Apple_Free : 3): verified   CRC32 $00000000
+Checksumming disk image (Apple_APFS : 4)…
+         disk image (Apple_APFS : 4): verified   CRC32 $25D28032
+Checksumming  (Apple_Free : 5)…
+                    (Apple_Free : 5): verified   CRC32 $00000000
+Checksumming GPT Partition Data (Backup GPT Table : 6)…
+GPT Partition Data (Backup GPT Table: verified   CRC32 $55D049F2
+Checksumming GPT Header (Backup GPT Header : 7)…
+  GPT Header (Backup GPT Header : 7): verified   CRC32 $253114D8
+verified   CRC32 $64E5781D
+/dev/disk5          	GUID_partition_scheme          	
+/dev/disk5s1        	Apple_APFS                     	
+/dev/disk6          	EF57347C-0000-11AA-AA11-0030654	
+/dev/disk6s1        	41504653-0000-11AA-AA11-0030654	/private/tmp/v
+"disk5" ejected.
+/Applications/Thumbpad.app: rejected
+Gatekeeper : non notarise (attendu)
+Executable=/Applications/Thumbpad.app/Contents/MacOS/Thumbpad
+Identifier=app.thumbpad
+Format=app bundle with Mach-O thin (arm64)
+CodeDirectory v=20400 size=30149 flags=0x2(adhoc) hashes=936+3 location=embedded
+Signature=adhoc
+curl: (28) Failed to connect to 127.0.0.1 port 8765 after 75003 ms: Couldn't connect to server
+{"name": "sjc22-be105-ee354a8e-e9f6-4e1f-acf9-7a292f6880c8-1E7A822039B6", "ok": true, "app": "Thumbpad", "version": "2.2", "peers": []}
+2026-10-23 23:49:31 lancement /Applications/Thumbpad.app/Contents/MacOS/Thumbpad 
+2026-10-23 23:50:41 Thumbpad 2.2 demarre sur le port 8765 (sjc22-be105-ee354a8e-e9f6-4e1f-acf9-7a292f6880c8-1E7A822039B6)
+2026-10-23 23:50:42 vraie souris prioritaire : oui ; raccourci Ctrl+Option+X : oui
+2026-10-23 23:50:42 page du telephone https://dvsn441.github.io/vanta/ : en ligne
+2026-10-23 23:50:42 relais connecte : broker.hivemq.com
+2026-10-23 23:50:43 relais connecte : broker.emqx.io
+button Allow of window 1 of application process UserNotificationCenter
+Thumbpad, 177, 31, 500, 673
+Thumbpad, 177, 31, 500, 673
+2026-10-23 23:50:41 Thumbpad 2.2 demarre sur le port 8765 (sjc22-be105-ee354a8e-e9f6-4e1f-acf9-7a292f6880c8-1E7A822039B6)
+2026-10-23 23:50:42 vraie souris prioritaire : oui ; raccourci Ctrl+Option+X : oui
+2026-10-23 23:50:42 page du telephone https://dvsn441.github.io/vanta/ : en ligne
+2026-10-23 23:50:42 relais connecte : broker.hivemq.com
+2026-10-23 23:50:43 relais connecte : broker.emqx.io
+{"name": "sjc22-be105-ee354a8e-e9f6-4e1f-acf9-7a292f6880c8-1E7A822039B6", "ok": true, "app": "Thumbpad", "version": "2.2", "peers": []}
