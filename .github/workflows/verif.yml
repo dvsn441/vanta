@@ -1,0 +1,107 @@
+# Verifie, comme un inconnu sans compte, qu'on peut telecharger Thumbpad depuis le site public et le lancer.
+# Le test du telephone lance le code de vanta-src (secret VANTA_SRC_TOKEN). Resultat : branche "verif".
+name: Verif
+on:
+  workflow_dispatch:
+    inputs:
+      ref: { description: "Branche de vanta-src pour le test du telephone", default: main }
+jobs:
+  mac:
+    strategy:
+      matrix:
+        include:
+          - { os: macos-15, arch: AppleSilicon }
+          
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Telecharger depuis le site et lancer
+        shell: bash
+        run: |
+          mkdir -p out; exec > >(tee "out/verif-${{ matrix.arch }}.txt") 2>&1
+          B=https://dvsn441.github.io/vanta/telecharger
+          curl -fsS -o /dev/null -w "page %{http_code}\n" $B/
+          curl -fsSL -o Thumbpad.dmg $B/Thumbpad-Mac-${{ matrix.arch }}.dmg && shasum -a 256 Thumbpad.dmg
+          curl -fsSL -o Thumbpad.exe $B/Thumbpad.exe && shasum -a 256 Thumbpad.exe
+          xattr -w com.apple.quarantine "0081;$(printf %x $(date +%s));Safari;" Thumbpad.dmg
+          hdiutil attach -nobrowse -mountpoint /tmp/v Thumbpad.dmg
+          cp -R /tmp/v/Thumbpad.app /Applications/ && hdiutil detach /tmp/v
+          spctl -a -vv /Applications/Thumbpad.app || echo "Gatekeeper : non notarise (attendu)"
+          codesign -dv /Applications/Thumbpad.app 2>&1 | head -5
+          xattr -dr com.apple.quarantine /Applications/Thumbpad.app
+          /Applications/Thumbpad.app/Contents/MacOS/Thumbpad >/dev/null 2>&1 &
+          for i in $(seq 1 30); do sleep 2; curl -fsS http://127.0.0.1:8765/api/ping && break; done
+          sleep 8; echo; cat "$HOME/Library/Application Support/Thumbpad/thumbpad.log"
+          screencapture -x "out/ecran-${{ matrix.arch }}.png" || echo "capture impossible"
+          osascript -e 'tell application "System Events" to click button "Allow" of window 1 of process "UserNotificationCenter"' || true
+          osascript -e 'tell application "System Events" to get {name, position, size} of every window of process "Thumbpad"' || echo "pas de liste de fenetres"
+          sleep 3; screencapture -x "out/ecran2-${{ matrix.arch }}.png" || true
+          open -a /Applications/Thumbpad.app; sleep 5; screencapture -x "out/ecran3-${{ matrix.arch }}.png" || true
+          osascript -e 'tell application "System Events" to get {name, position, size} of every window of process "Thumbpad"' || true
+          tail -5 "$HOME/Library/Application Support/Thumbpad/thumbpad.log"
+          curl -fsS http://127.0.0.1:8765/api/ping
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { retention-days: 3, name: "verif-${{ matrix.arch }}", path: out }
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Telecharger depuis le site et lancer
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          Start-Transcript out/verif-Windows.txt
+          Invoke-WebRequest https://dvsn441.github.io/vanta/telecharger/Thumbpad.exe -OutFile Thumbpad.exe
+          (Get-FileHash Thumbpad.exe).Hash
+          Start-Process .\Thumbpad.exe
+          $ok = $false
+          foreach ($i in 1..40) { Start-Sleep 2; try { (Invoke-WebRequest http://127.0.0.1:8765/api/ping -UseBasicParsing).Content; $ok = $true; break } catch {} }
+          Start-Sleep 8
+          Get-Content "$env:APPDATA\Thumbpad\thumbpad.log"
+          Stop-Transcript
+          if (-not $ok) { exit 1 }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { retention-days: 3, name: verif-Windows, path: out }
+  telephone:
+    # Le vrai parcours : Thumbpad tourne sur un PC, un "iPhone" ouvre la page publique et tape le code.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: dvsn441/vanta-src
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.VANTA_SRC_TOKEN }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Lancer Thumbpad et tester le telephone
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          python -m pip install --upgrade pip | Out-Null
+          python -m pip install -r requirements.txt
+          python -m pip install playwright==1.48.0
+          python -m playwright install chromium | Out-Null
+          $env:THUMBPAD_TEST_CODE_FILE = "$PWD\code.txt"; $env:THUMBPAD_DATA = "$env:APPDATA\Thumbpad"
+          Start-Process python -ArgumentList "thumbpad.py","--no-autostart"
+          foreach ($i in 1..40) { Start-Sleep 2; try { Invoke-WebRequest http://127.0.0.1:8765/api/ping -UseBasicParsing | Out-Null; break } catch {} }
+          Start-Sleep 10
+          python tests/e2e_phone.py out *>&1 | Tee-Object out/telephone.txt
+          $rc = $LASTEXITCODE
+          Get-Content "$env:APPDATA\Thumbpad\thumbpad.log" | Tee-Object -Append out/telephone.txt
+          exit $rc
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { retention-days: 3, name: verif-telephone, path: out }
+  rapport:
+    needs: [mac, windows, telephone]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true }
+      - run: |
+          cd out && git init -q -b verif && git add -A
+          git -c user.name=thumbpad-build -c user.email=build@users.noreply.github.com commit -qm verif
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" verif
