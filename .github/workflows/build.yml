@@ -1,0 +1,112 @@
+# Fabrique Thumbpad depuis le code prive (dvsn441/vanta-src), ici parce que les minutes Actions
+# d'un depot public sont gratuites. Secret VANTA_SRC_TOKEN : jeton en lecture seule sur vanta-src.
+# Actions > Build > Run workflow (ref = branche de vanta-src). Resultat : branche "binaires" de ce depot.
+name: Build
+on:
+  workflow_dispatch:
+    inputs:
+      ref: { description: "Branche de vanta-src a fabriquer", default: main }
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: dvsn441/vanta-src
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.VANTA_SRC_TOKEN }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Inno Setup (installeur)
+        shell: pwsh
+        run: if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+      - run: .\build_windows.cmd
+        shell: cmd
+      - name: Test installation lambda puis desinstallation
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force rapport | Out-Null
+          Start-Transcript rapport/test-Windows.txt
+          "installeur : " + (Test-Path dist\Thumbpad-Setup.exe) + " " + (Get-Item dist\Thumbpad-Setup.exe).Length
+          Start-Process dist\Thumbpad-Setup.exe -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -Wait
+          "--- mise a jour par-dessus un Thumbpad ouvert"
+          Start-Process "$env:LOCALAPPDATA\Programs\Thumbpad\Thumbpad.exe"
+          foreach ($i in 1..40) { Start-Sleep 2; try { Invoke-WebRequest http://127.0.0.1:8765/api/ping -UseBasicParsing | Out-Null; break } catch {} }
+          "Thumbpad ouvert avant : " + [bool](Get-Process Thumbpad -ErrorAction SilentlyContinue)
+          $p = Start-Process dist\Thumbpad-Setup.exe -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/LOG=rapport\setup-maj.txt" -Wait -PassThru
+          "mise a jour, code de sortie : " + $p.ExitCode
+          "Thumbpad ferme par l'installeur : " + (-not [bool](Get-Process Thumbpad -ErrorAction SilentlyContinue))
+          "ecran applications ouvertes : " + [bool](Select-String -Quiet -Path rapport\setup-maj.txt -Pattern "RestartManager|applications are using files")
+          Start-Process "$env:LOCALAPPDATA\Programs\Thumbpad\Thumbpad.exe"
+          foreach ($i in 1..40) { Start-Sleep 2; try { (Invoke-WebRequest http://127.0.0.1:8765/api/ping -UseBasicParsing).Content; break } catch {} }
+          Start-Sleep 25
+          $inst = "$env:LOCALAPPDATA\Programs\Thumbpad\Thumbpad.exe"
+          "installe : " + (Test-Path $inst)
+          "demarrage (Run) : " + (Get-ItemProperty HKCU:\Software\Microsoft\Windows\CurrentVersion\Run -Name Thumbpad -ErrorAction SilentlyContinue).Thumbpad
+          "ancien raccourci Demarrage : " + (Test-Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Thumbpad.lnk")
+          "menu Demarrer : " + (Test-Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Thumbpad.lnk")
+          "Applications installees : " + (Get-ItemProperty HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Thumbpad -ErrorAction SilentlyContinue).UninstallString
+          "liaison directe : " + (-not (Select-String -Quiet -Path "$env:APPDATA\Thumbpad\thumbpad.log" -Pattern "liaison directe indisponible"))
+          "version (fichier) : " + (Get-Item $inst).VersionInfo.ProductVersion
+          Start-Process $inst -ArgumentList "--uninstall" -Wait
+          Start-Sleep 6
+          "--- apres desinstallation"
+          "programme : " + (Test-Path $inst)
+          "reglages : " + (Test-Path "$env:APPDATA\Thumbpad")
+          "Run : " + [bool](Get-ItemProperty HKCU:\Software\Microsoft\Windows\CurrentVersion\Run -Name Thumbpad -ErrorAction SilentlyContinue)
+          "menu Demarrer : " + (Test-Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Thumbpad.lnk")
+          "Applications installees : " + (Test-Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Thumbpad)
+          try { Invoke-WebRequest http://127.0.0.1:8765/api/ping -UseBasicParsing -TimeoutSec 3 | Out-Null; "port : encore ouvert" } catch { "port : ferme" }
+          Stop-Transcript
+      - uses: actions/upload-artifact@v4
+        with: { retention-days: 3, name: Thumbpad-Windows, path: "dist/Thumbpad.exe\ndist/Thumbpad-Setup.exe\nrapport/test-Windows.txt" }
+
+  mac:
+    # Deux versions : Apple Silicon (M1 a M4) et anciens Mac Intel
+    strategy:
+      matrix:
+        include:
+          - { os: macos-15, arch: AppleSilicon }
+          - { os: macos-15-intel, arch: Intel }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: dvsn441/vanta-src
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.VANTA_SRC_TOKEN }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: sh build_mac.sh
+      - name: Test de demarrage (ping local + relais)
+        run: |
+          exec > >(tee "dist/test-${{ matrix.arch }}.txt") 2>&1
+          file dist/Thumbpad.app/Contents/MacOS/Thumbpad
+          python3 -c "import aiortc, av; print('aiortc', aiortc.__version__, 'av', av.__version__)" || true
+          dist/Thumbpad.app/Contents/MacOS/Thumbpad > run.txt 2>&1 &
+          for i in $(seq 1 30); do sleep 2; curl -fsS http://127.0.0.1:8765/api/ping && break; done
+          sleep 10
+          echo "--- log"; cat "$HOME/Library/Application Support/Thumbpad/thumbpad.log" || true
+          echo "--- stdout"; cat run.txt || true
+          curl -fsS http://127.0.0.1:8765/api/ping
+          pkill -f Thumbpad.app || true
+        shell: bash
+      - run: mv dist/Thumbpad.dmg "dist/Thumbpad-Mac-${{ matrix.arch }}.dmg"
+      - uses: actions/upload-artifact@v4
+        with: { retention-days: 3, name: "Thumbpad-Mac-${{ matrix.arch }}", path: "dist/Thumbpad-Mac-${{ matrix.arch }}.dmg\ndist/test-${{ matrix.arch }}.txt" }
+
+  # Range les fichiers fabriques dans la branche "binaires" (recuperable par git, sans passer par les artefacts)
+  binaires:
+    needs: [windows, mac]
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true }
+      - run: |
+          cd out && ls -la
+          git init -q -b binaires && git add -A
+          git -c user.name=thumbpad-build -c user.email=build@users.noreply.github.com commit -qm "Build ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" binaires
